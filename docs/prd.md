@@ -58,7 +58,7 @@ Commerce AdPilot은 온라인 쇼핑 최적화를 위한 생성형 AI 콘텐츠 
    - 저장 및 내보내기 (텍스트 파일, 클립보드 복사)
 
 4. **사용자 계정 관리**
-   - 회원가입 및 로그인
+   - 회원가입 및 로그인 (Supabase Auth 기반)
    - 생성 이력 저장
    - 기본 설정 관리
 
@@ -111,12 +111,20 @@ Commerce AdPilot은 온라인 쇼핑 최적화를 위한 생성형 AI 콘텐츠 
 ## 7. 기술 스택
 
 ### 프론트엔드
-- React.js 또는 Vue.js
-- HTML5, CSS3, JavaScript
+- Next.js
+- TypeScript
+- Tailwind CSS
 
 ### 백엔드
-- Node.js 또는 Python (FastAPI)
-- 데이터베이스: MongoDB 또는 PostgreSQL
+- FastAPI
+- Python
+
+### 데이터베이스
+- PostgreSQL
+- SQLAlchemy ORM
+
+### 로그인
+- Supabase Auth 기반
 
 ### AI 통합
 - OpenAI GPT API 또는 유사 모델
