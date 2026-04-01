@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='486' viewBox='0 0 900 486'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='486' />
+  <rect class='frame' x='8' y='8' width='884' height='470' />
+  <text class='title' x='18' y='26'>3.1 로그인/회원가입 화면</text>
+  <text class='txt' x='18' y='54'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='78'>| Commerce AdPilot                                                       [KR|EN] |</text>
+  <text class='txt' x='18' y='102'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='126'>|                                                                                |</text>
+  <text class='txt' x='18' y='150'>|                         +------------------------------+                       |</text>
+  <text class='txt' x='18' y='174'>|                         |          로그인              |                       |</text>
+  <text class='txt' x='18' y='198'>|                         |------------------------------|                       |</text>
+  <text class='txt' x='18' y='222'>|                         | 이메일      [______________] |                       |</text>
+  <text class='txt' x='18' y='246'>|                         | 비밀번호    [______________] |                       |</text>
+  <text class='txt' x='18' y='270'>|                         | [ ] 로그인 상태 유지         |                       |</text>
+  <text class='txt' x='18' y='294'>|                         |                              |                       |</text>
+  <text class='txt' x='18' y='318'>|                         | [ 로그인 ]                  |                       |</text>
+  <text class='txt' x='18' y='342'>|                         |                              |                       |</text>
+  <text class='txt' x='18' y='366'>|                         | 회원가입하기  비밀번호 찾기  |                       |</text>
+  <text class='txt' x='18' y='390'>|                         +------------------------------+                       |</text>
+  <text class='txt' x='18' y='414'>|                                                                                |</text>
+  <text class='txt' x='18' y='438'>+--------------------------------------------------------------------------------+</text>
+</svg>
+

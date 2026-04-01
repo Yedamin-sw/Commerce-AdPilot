@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='510' viewBox='0 0 900 510'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='510' />
+  <rect class='frame' x='8' y='8' width='884' height='494' />
+  <text class='title' x='18' y='26'>3.3 콘텐츠 생성 화면 (핵심)</text>
+  <text class='txt' x='18' y='54'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='78'>| Logo | 캠페인: 캠페인 A &gt; 콘텐츠 생성                    [이력] [설정] [로그아웃]|</text>
+  <text class='txt' x='18' y='102'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='126'>| [좌측: 입력 폼 (FR-01)]                         | [우측: 생성 옵션 (FR-02)]      |</text>
+  <text class='txt' x='18' y='150'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='174'>| 제품 이름*        [__________________________]  | 언어      [한국어 v]           |</text>
+  <text class='txt' x='18' y='198'>| 카테고리*         [__________________________]  | 톤앤매너  [친근한 v]           |</text>
+  <text class='txt' x='18' y='222'>| 주요 특징*        [+ 특징 추가]                | 길이      [표준 v]             |</text>
+  <text class='txt' x='18' y='246'>|  - [______________________________]            | 목적      [전환 v]             |</text>
+  <text class='txt' x='18' y='270'>| 타겟 고객*        [__________________________]  |                                  |</text>
+  <text class='txt' x='18' y='294'>| 가격대(선택)      [__________________________]  | [생성하기] [전체 초기화]       |</text>
+  <text class='txt' x='18' y='318'>| 브랜드 톤(선택)   [__________________________]  |                                  |</text>
+  <text class='txt' x='18' y='342'>| 금지어(선택)      [__________________________]  | 상태: 대기 / 생성중 / 실패      |</text>
+  <text class='txt' x='18' y='366'>|                                              |                                  |</text>
+  <text class='txt' x='18' y='390'>| [템플릿 저장] [불러오기]                        | 실패 시: [원인 안내 + 재시도]   |</text>
+  <text class='txt' x='18' y='414'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='438'>| Validation/Error Bar: 필수값 누락, 형식 오류, 요청 제한 안내                   |</text>
+  <text class='txt' x='18' y='462'>+--------------------------------------------------------------------------------+</text>
+</svg>
+
