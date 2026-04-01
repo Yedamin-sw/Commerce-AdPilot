@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='342' viewBox='0 0 900 342'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='342' />
+  <rect class='frame' x='8' y='8' width='884' height='326' />
+  <text class='title' x='18' y='26'>3.7 오류/로딩 상태 컴포넌트</text>
+  <text class='txt' x='18' y='54'>[생성중 오버레이]</text>
+  <text class='txt' x='18' y='78'>+-----------------------------------+</text>
+  <text class='txt' x='18' y='102'>| 콘텐츠 생성 중... (약 5~10초)      |</text>
+  <text class='txt' x='18' y='126'>| [====      ] 45%                  |</text>
+  <text class='txt' x='18' y='150'>| 작업을 종료하지 마세요             |</text>
+  <text class='txt' x='18' y='174'>+-----------------------------------+</text>
+  <text class='txt' x='18' y='198'></text>
+  <text class='txt' x='18' y='222'>[실패 토스트/배너]</text>
+  <text class='txt' x='18' y='246'>+--------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='270'>| 생성 실패: 요청 제한(429). 잠시 후 다시 시도하세요. [재시도] |</text>
+  <text class='txt' x='18' y='294'>+--------------------------------------------------------------+</text>
+</svg>
+

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='342' viewBox='0 0 900 342'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='342' />
+  <rect class='frame' x='8' y='8' width='884' height='326' />
+  <text class='title' x='18' y='26'>3.5 생성 이력 화면</text>
+  <text class='txt' x='18' y='54'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='78'>| 생성 이력                                                     [검색] [필터]     |</text>
+  <text class='txt' x='18' y='102'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='126'>| 날짜/시간       제품명        유형         언어  톤    상태     액션             |</text>
+  <text class='txt' x='18' y='150'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='174'>| 03/22 14:20    무선 청소기    광고+설명    KR   전환   완료   [열기] [복제]     |</text>
+  <text class='txt' x='18' y='198'>| 03/22 13:55    텀블러         설명         EN   인지   완료   [열기] [복제]     |</text>
+  <text class='txt' x='18' y='222'>| 03/22 12:40    샴푸           전체         KR   참여   실패   [원인] [재시도]   |</text>
+  <text class='txt' x='18' y='246'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='270'>| 페이지네이션 &lt; 1 2 3 &gt;                                                         |</text>
+  <text class='txt' x='18' y='294'>+--------------------------------------------------------------------------------+</text>
+</svg>
+

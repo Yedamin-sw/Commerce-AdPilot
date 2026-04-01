@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='438' viewBox='0 0 900 438'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='438' />
+  <rect class='frame' x='8' y='8' width='884' height='422' />
+  <text class='title' x='18' y='26'>4.2 모바일 결과 화면</text>
+  <text class='txt' x='18' y='54'>+-----------------------------+</text>
+  <text class='txt' x='18' y='78'>| 결과                [저장]  |</text>
+  <text class='txt' x='18' y='102'>|-----------------------------|</text>
+  <text class='txt' x='18' y='126'>| 광고 문구(짧은)             |</text>
+  <text class='txt' x='18' y='150'>| [재생성] [복사]             |</text>
+  <text class='txt' x='18' y='174'>| 원본: ...                   |</text>
+  <text class='txt' x='18' y='198'>| 수정: [텍스트영역.......]   |</text>
+  <text class='txt' x='18' y='222'>|-----------------------------|</text>
+  <text class='txt' x='18' y='246'>| 제품 설명                   |</text>
+  <text class='txt' x='18' y='270'>| [재생성] [복사]             |</text>
+  <text class='txt' x='18' y='294'>| 원본: ...                   |</text>
+  <text class='txt' x='18' y='318'>| 수정: [텍스트영역.......]   |</text>
+  <text class='txt' x='18' y='342'>|-----------------------------|</text>
+  <text class='txt' x='18' y='366'>| [새 버전 저장]              |</text>
+  <text class='txt' x='18' y='390'>+-----------------------------+</text>
+</svg>
+

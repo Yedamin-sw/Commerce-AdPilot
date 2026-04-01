@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='462' viewBox='0 0 900 462'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='462' />
+  <rect class='frame' x='8' y='8' width='884' height='446' />
+  <text class='title' x='18' y='26'>3.2 대시보드(프로젝트/캠페인 목록)</text>
+  <text class='txt' x='18' y='54'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='78'>| Logo | 프로젝트 대시보드                           [새 프로젝트] [프로필 v]    |</text>
+  <text class='txt' x='18' y='102'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='126'>| 검색 [__________________]   정렬 [최신순 v]   필터 [전체 상태 v]               |</text>
+  <text class='txt' x='18' y='150'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='174'>| +--------------------+  +--------------------+  +--------------------+         |</text>
+  <text class='txt' x='18' y='198'>| | 캠페인 A           |  | 캠페인 B           |  | + 새 캠페인 만들기 |         |</text>
+  <text class='txt' x='18' y='222'>| | 최근 수정: 03/22   |  | 최근 수정: 03/21   |  |                    |         |</text>
+  <text class='txt' x='18' y='246'>| | 콘텐츠 12개        |  | 콘텐츠 5개         |  |                    |         |</text>
+  <text class='txt' x='18' y='270'>| | [열기]             |  | [열기]             |  |                    |         |</text>
+  <text class='txt' x='18' y='294'>| +--------------------+  +--------------------+  +--------------------+         |</text>
+  <text class='txt' x='18' y='318'>|                                                                                |</text>
+  <text class='txt' x='18' y='342'>| 최근 생성 이력                                                                  |</text>
+  <text class='txt' x='18' y='366'>| - 2026-03-22 14:20 / 무선 청소기 / 광고 문구 생성                              |</text>
+  <text class='txt' x='18' y='390'>| - 2026-03-22 13:55 / 텀블러 / 제품 설명 생성                                  |</text>
+  <text class='txt' x='18' y='414'>+--------------------------------------------------------------------------------+</text>
+</svg>
+
