@@ -33,10 +33,5 @@
 
 ![5.2 모바일 결과 화면](wireframes-svg/09-4.2.svg)
 
-## 참고: 레거시 SVG (아카이브)
-
-- 대시보드(구버전): ![legacy-dashboard](wireframes-svg/02-3.2.svg)
-- 생성 이력(구버전): ![legacy-history](wireframes-svg/05-3.5.svg)
-- 설정(구버전): ![legacy-settings](wireframes-svg/06-3.6.svg)
 
 
