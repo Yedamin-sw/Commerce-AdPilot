@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commerce AdPilot - Polished UI Preview</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --bg2: #fffaf3;
+      --ink: #1a1a1a;
+      --muted: #6e655b;
+      --line: #dccfbf;
+      --card: #fffdf9;
+      --brand: #0f766e;
+      --brand-2: #0b5f58;
+      --accent: #c2410c;
+      --ok: #166534;
+      --warn: #b45309;
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(34, 30, 23, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "SUIT Variable", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 90% -10%, #efe3d2 0%, transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, #f1e7d9 0%, transparent 55%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1200px, 92vw);
+      margin: 42px auto 64px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #153e3a 0%, #1e544f 45%, #2b6f66 100%);
+      color: #f7f9f8;
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: #e4ece9;
+      font-size: 15px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .chip {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+      margin: 34px 2px 16px;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .screen {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fdf7ee;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .bar strong {
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .input {
+      height: 34px;
+      border: 1px solid #d9c9b7;
+      border-radius: 8px;
+      background: #fffdfa;
+      margin-bottom: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 34px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: default;
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn.secondary {
+      background: #efe6da;
+      color: #4b3c2f;
+    }
+
+    .result-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .result-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 11px;
+      border: 1px solid #dfcfbc;
+      background: #fbf4ea;
+      color: #705e4d;
+    }
+
+    .box {
+      border: 1px dashed #d8c7b3;
+      border-radius: 8px;
+      min-height: 40px;
+      padding: 8px;
+      font-size: 12px;
+      color: #4d4032;
+      margin-bottom: 8px;
+      background: #fffdf8;
+    }
+
+    .status {
+      margin-top: 10px;
+      border-left: 4px solid var(--warn);
+      background: #fff7eb;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #5e4621;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .history-table th,
+    .history-table td {
+      border-bottom: 1px solid #eee1d1;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .history-table th {
+      background: #fbf5ec;
+      color: #5f5143;
+      font-weight: 700;
+    }
+
+    .mobile-preview {
+      width: 320px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .phone-notch {
+      width: 120px;
+      height: 16px;
+      border-radius: 0 0 12px 12px;
+      background: #efe2d2;
+      margin: -12px auto 10px;
+    }
+
+    .mobile-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #6a5b4d;
+      margin-bottom: 10px;
+    }
+
+    .mobile-field {
+      margin-bottom: 8px;
+    }
+
+    .mobile-label {
+      font-size: 11px;
+      color: #756758;
+      margin-bottom: 4px;
+    }
+
+    .mobile-input {
+      height: 30px;
+      border: 1px solid #dccdbc;
+      border-radius: 8px;
+      background: #fffdf9;
+    }
+
+    .layout-mobile {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.12); }
+      50% { box-shadow: 0 0 0 10px rgba(15, 118, 110, 0.03); }
+    }
+
+    @media (max-width: 900px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+      .mobile-preview {
+        width: 100%;
+        max-width: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1 class="title">Commerce AdPilot<br/>Polished UI Preview</h1>
+      <p class="subtitle">기존 와이어프레임 구조를 유지하면서, 화면 계층/상태/우선순위를 더 명확히 보이도록 다듬은 중간 충실도 시안입니다.</p>
+      <div class="chips">
+        <span class="chip">KR/EN i18n</span>
+        <span class="chip">FR-01 ~ FR-05 반영</span>
+        <span class="chip">Desktop + Mobile</span>
+        <span class="chip">WCAG 고려 구조</span>
+      </div>
+    </section>
+
+    <h2 class="section-title">1. 콘텐츠 생성 화면 (핵심)</h2>
+    <section class="screen pulse">
+      <div class="bar">
+        <strong>캠페인 A &gt; 콘텐츠 생성</strong>
+        <span>이력 | 설정 | 로그아웃</span>
+      </div>
+      <div class="content two-col">
+        <div class="panel">
+          <div class="label">제품 정보 입력 (FR-01)</div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="btn-row">
+            <button class="btn secondary">템플릿 저장</button>
+            <button class="btn secondary">불러오기</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="label">생성 옵션 (FR-02)</div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="input"></div>
+          <div class="btn-row">
+            <button class="btn primary">생성하기</button>
+            <button class="btn secondary">전체 초기화</button>
+          </div>
+          <div class="status">요청 제한 또는 서버 오류 발생 시 원인 배너 + 재시도 버튼을 같은 위치에 고정합니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="section-title">2. 생성 결과 + 인라인 편집</h2>
+    <section class="screen">
+      <div class="bar">
+        <strong>캠페인 A &gt; 생성 결과</strong>
+        <span>전체 재생성</span>
+      </div>
+      <div class="content">
+        <article class="result-card">
+          <div class="result-head">
+            <strong>광고 문구 (짧은)</strong>
+            <span class="tag">재생성 · 복사 · 다운로드</span>
+          </div>
+          <div class="box">원본: 1~2문장 결과 텍스트...</div>
+          <div class="box">수정: 인라인 편집 텍스트 영역...</div>
+        </article>
+        <article class="result-card">
+          <div class="result-head">
+            <strong>제품 설명</strong>
+            <span class="tag">재생성 · 복사 · 다운로드</span>
+          </div>
+          <div class="box">원본: 상세 소개형 텍스트...</div>
+          <div class="box">수정: 인라인 편집 텍스트 영역...</div>
+        </article>
+        <div class="btn-row">
+          <button class="btn primary">변경사항 저장</button>
+          <button class="btn secondary">새 버전으로 저장</button>
+          <button class="btn secondary">이력으로 이동</button>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="section-title">3. 생성 이력</h2>
+    <section class="screen">
+      <div class="bar">
+        <strong>생성 이력</strong>
+        <span>검색 | 필터</span>
+      </div>
+      <div class="content">
+        <table class="history-table" aria-label="생성 이력 테이블">
+          <thead>
+            <tr>
+              <th>날짜/시간</th>
+              <th>제품명</th>
+              <th>유형</th>
+              <th>언어</th>
+              <th>상태</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>03/22 14:20</td>
+              <td>무선 청소기</td>
+              <td>광고+설명</td>
+              <td>KR</td>
+              <td style="color: var(--ok);">완료</td>
+              <td>열기 / 복제</td>
+            </tr>
+            <tr>
+              <td>03/22 12:40</td>
+              <td>샴푸</td>
+              <td>전체</td>
+              <td>KR</td>
+              <td style="color: var(--warn);">실패</td>
+              <td>원인 / 재시도</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <h2 class="section-title">4. 모바일 프리뷰</h2>
+    <section class="layout-mobile">
+      <article class="mobile-preview">
+        <div class="phone-notch"></div>
+        <div class="mobile-head">
+          <strong>생성</strong>
+          <span>옵션</span>
+        </div>
+        <div class="mobile-field">
+          <div class="mobile-label">제품 이름*</div>
+          <div class="mobile-input"></div>
+        </div>
+        <div class="mobile-field">
+          <div class="mobile-label">카테고리*</div>
+          <div class="mobile-input"></div>
+        </div>
+        <div class="mobile-field">
+          <div class="mobile-label">주요 특징*</div>
+          <div class="mobile-input"></div>
+        </div>
+        <div class="mobile-field">
+          <div class="mobile-label">타겟 고객*</div>
+          <div class="mobile-input"></div>
+        </div>
+        <div class="btn-row" style="margin-top: 10px;">
+          <button class="btn primary">생성하기</button>
+          <button class="btn secondary">템플릿 저장</button>
+        </div>
+      </article>
+
+      <article class="mobile-preview">
+        <div class="phone-notch"></div>
+        <div class="mobile-head">
+          <strong>결과</strong>
+          <span>저장</span>
+        </div>
+        <div class="result-card" style="margin-bottom: 8px;">
+          <div class="result-head">
+            <strong style="font-size: 12px;">광고 문구(짧은)</strong>
+            <span class="tag">재생성</span>
+          </div>
+          <div class="box" style="min-height: 34px;">원본...</div>
+          <div class="box" style="min-height: 34px;">수정...</div>
+        </div>
+        <div class="result-card" style="margin-bottom: 8px;">
+          <div class="result-head">
+            <strong style="font-size: 12px;">제품 설명</strong>
+            <span class="tag">복사</span>
+          </div>
+          <div class="box" style="min-height: 34px;">원본...</div>
+          <div class="box" style="min-height: 34px;">수정...</div>
+        </div>
+        <button class="btn primary" style="width: 100%;">새 버전 저장</button>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
