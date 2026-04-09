@@ -1,0 +1,13 @@
+#pip install -r requirements.txt
+# backend dependencies
+fastapi
+uvicorn[standard]
+supabase
+openai
+pandas
+openpyxl
+pydantic
+python-multipart
+sqlalchemy
+alembic
+python-dotenv
