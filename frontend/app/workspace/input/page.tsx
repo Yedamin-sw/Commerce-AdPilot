@@ -1,38 +1,30 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link'; // 나중에 페이지 이동을 위해 미리 추가!
+import React, { useState } from 'react';
+import Link from 'next/link';
 import { 
-  LayoutGrid, 
-  Play, 
-  FileText, 
-  CheckCircle2, 
-  Upload, 
-  History, 
-  Plus, 
-  ChevronDown, 
-  Zap, 
-  Settings2,
-  Camera,
-  Type,
-  Share2 // Facebook 대신 쓸 비슷한 아이콘이에요!
+  LayoutGrid, Play, FileText, CheckCircle2, Upload, History, 
+  Plus, ChevronDown, Zap, Settings2, Camera, Type, Share2, X, Check, Copy, Download
 } from 'lucide-react';
 
 export default function WorkspacePage() {
+  // 모달 상태 관리 (기본은 닫힘)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
-    <div className="flex h-screen bg-[#F8FAFC] font-sans text-slate-900">
+    <div className="relative flex h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
       
       {/* --- [1] 왼쪽 사이드바 --- */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col p-6">
         <div className="mb-10 px-2">
-          <h1 className="text-xl font-bold text-slate-800">Commerce AdPilot</h1>
+          <Link href="/"><h1 className="text-xl font-bold text-slate-800">Commerce AdPilot</h1></Link>
         </div>
 
         <nav className="flex-1 space-y-8">
           <div>
             <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-2">Workflow Status</h2>
             <div className="space-y-1">
-              <div className="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-semibold">
+              <div className="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-semibold cursor-default">
                 <Zap size={18} className="animate-pulse" /> Generating
               </div>
               <div className="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition cursor-pointer">
@@ -46,7 +38,11 @@ export default function WorkspacePage() {
         </nav>
 
         <div className="space-y-2 pt-6 border-t border-slate-100">
-          <button className="flex items-center justify-center gap-2 w-full py-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition">
+          {/* ✅ [CSV Upload] 버튼: 클릭 시 모달 열기 */}
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center justify-center gap-2 w-full py-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition"
+          >
             <Upload size={18} /> CSV Upload
           </button>
           <button className="flex items-center justify-center gap-2 w-full py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-medium transition">
@@ -59,44 +55,43 @@ export default function WorkspacePage() {
       <section className="flex-1 bg-white overflow-y-auto border-r border-slate-200 p-10">
         <div className="max-w-2xl mx-auto space-y-10">
           <div className="flex justify-between items-end">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-800">Campaign Input</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-800 text-left">Campaign Input</h2>
             <div className="flex bg-slate-100 p-1 rounded-xl">
               <button className="px-4 py-1.5 bg-white shadow-sm rounded-lg text-sm font-bold text-blue-600 transition">수기 입력</button>
               <button className="px-4 py-1.5 text-slate-500 text-sm font-medium hover:text-slate-700 transition">CSV 입력</button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 text-left">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">상품명*</label>
+              <label className="text-sm font-bold text-slate-700 ml-1">상품명*</label>
               <input type="text" placeholder="예: 프리미엄 오가닉 배게" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">카테고리*</label>
+              <label className="text-sm font-bold text-slate-700 ml-1">카테고리*</label>
               <input type="text" placeholder="생활/가전" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition" />
             </div>
             <div className="col-span-2 space-y-2">
               <div className="flex justify-between">
-                <label className="text-sm font-bold text-slate-700">주요 특징*</label>
+                <label className="text-sm font-bold text-slate-700 ml-1">주요 특징*</label>
                 <button className="text-blue-500 text-xs font-bold hover:underline flex items-center gap-1"><Plus size={14}/>추가</button>
               </div>
               <div className="space-y-3">
-                <input type="text" value="1. 100% 천연 라텍스 사용" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-600" readOnly />
-                <input type="text" value="2. 경추 보호 C자형 곡선 설계" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-600" readOnly />
+                <input type="text" defaultValue="1. 100% 천연 라텍스 사용" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-600" />
+                <input type="text" defaultValue="2. 경추 보호 C자형 곡선 설계" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-600" />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">타겟 고객*</label>
+              <label className="text-sm font-bold text-slate-700 ml-1">타겟 고객*</label>
               <input type="text" placeholder="3040 직장인, 불면증 환자" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">(선택) 가격대</label>
+              <label className="text-sm font-bold text-slate-700 ml-1">(선택) 가격대</label>
               <input type="text" placeholder="89,000원" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition" />
             </div>
           </div>
 
-          {/* 브랜드 가이드 섹션 */}
-          <div className="mt-12 p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-4">
+          <div className="mt-12 p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-4 text-left">
             <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800 tracking-tight">
               <Settings2 size={16} /> TEAM BRAND GUIDE
             </h3>
@@ -124,7 +119,7 @@ export default function WorkspacePage() {
 
       {/* --- [3] 오른쪽 섹션 (Options & Preview) --- */}
       <section className="w-[420px] bg-slate-50 p-10 flex flex-col">
-        <div className="flex-1 space-y-10">
+        <div className="flex-1 space-y-10 text-left">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold tracking-tight text-slate-800">Generation Options</h2>
             <div className="flex gap-2">
@@ -168,7 +163,6 @@ export default function WorkspacePage() {
             </div>
           </div>
 
-          {/* AI 프리뷰 이미지 박스 */}
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-200 flex items-center justify-center group border border-slate-200 shadow-inner">
              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
              <div className="relative text-center text-white space-y-2">
@@ -178,10 +172,72 @@ export default function WorkspacePage() {
           </div>
         </div>
 
-        <button className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 flex items-center justify-center gap-3 transition transform active:scale-[0.98]">
+        {/* ✅ [생성하기] 버튼: 클릭 시 Result 페이지로 이동 */}
+        <Link 
+          href="/workspace/result" 
+          className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 flex items-center justify-center gap-3 transition transform active:scale-[0.98]"
+        >
           <Play size={20} fill="white" /> 생성하기
-        </button>
+        </Link>
       </section>
+
+      {/* --- [내보내기 모달 레이어] --- */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center px-8 py-6 border-b border-slate-50">
+              <h3 className="text-lg font-bold text-slate-800">내보내기 설정</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition"><X size={20} /></button>
+            </div>
+            <div className="p-8 space-y-8 text-left">
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">내보내기 범위</p>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex items-center justify-center"><div className="w-2.5 h-2.5 bg-blue-600 rounded-full"></div></div>
+                    <span className="text-sm font-bold text-slate-700">전체 상품</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer opacity-40">
+                    <div className="w-5 h-5 rounded-full border-2 border-slate-300"></div>
+                    <span className="text-sm font-bold text-slate-500">선택 상품</span>
+                  </label>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">파일 형식</p>
+                  <div className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center text-sm font-bold text-slate-700">CSV <ChevronDown size={16} /></div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">인코딩</p>
+                  <div className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center text-sm font-bold text-slate-700">UTF-8 <ChevronDown size={16} /></div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">파일명 설정</p>
+                <div className="relative">
+                  <input type="text" defaultValue="campaign_2026_spring_copy" className="w-full p-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-sm font-bold text-blue-900 outline-none" />
+                  <span className="absolute right-4 top-4 text-xs font-bold text-blue-300">.csv</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-8 pt-0 space-y-3">
+              <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 hover:bg-blue-700 transition">
+                <Download size={18} /> 다운로드
+              </button>
+              <div className="flex gap-3">
+                <button className="flex-1 py-4 bg-blue-50 text-blue-600 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100">
+                  <Copy size={16} /> 복사
+                </button>
+                <button onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl font-bold text-sm hover:bg-slate-50">
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
