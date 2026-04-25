@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import auth, generate, history, product
+from backend.api import auth, generate, history
 
 app = FastAPI()
 # backend(uvicorn) = "http://localhost:8000"
