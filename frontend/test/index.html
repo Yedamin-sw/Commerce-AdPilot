@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Commerce-AdPilot API 테스트</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+    line-height: 1.5;
+  }
+  header {
+    padding: 20px 32px;
+    background: linear-gradient(90deg, #1e3a8a, #1e293b);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 22px; }
+  .config-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .config-bar input {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 220px;
+  }
+  .token-status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .token-status.empty { background: #4b5563; color: #d1d5db; }
+  .token-status.set { background: var(--success); color: white; }
+
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+  }
+  nav {
+    position: sticky;
+    top: 24px;
+    align-self: flex-start;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    height: fit-content;
+  }
+  nav h3 { margin: 0 0 12px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  nav a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  nav a:hover { background: var(--panel-2); color: var(--accent); }
+  nav .group-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 12px 0 4px;
+    padding-left: 12px;
+  }
+
+  .content { min-width: 0; }
+  section.api-group {
+    margin-bottom: 32px;
+  }
+  section.api-group > h2 {
+    font-size: 18px;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+
+  .endpoint {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .method {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: white;
+    letter-spacing: 0.5px;
+  }
+  .method.GET { background: #059669; }
+  .method.POST { background: #2563eb; }
+  .method.PUT { background: #d97706; }
+  .method.DELETE { background: #dc2626; }
+  .path {
+    font-family: "Consolas", "Monaco", monospace;
+    color: #fbbf24;
+    font-size: 14px;
+  }
+  .desc { color: var(--muted); font-size: 13px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .form-grid.single { grid-template-columns: 1fr; }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea, select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  input[type="file"] {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  button.action {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  button.action:hover { background: var(--accent-hover); }
+  button.action:disabled { background: #475569; cursor: not-allowed; }
+  button.secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  button.secondary:hover { color: var(--text); border-color: var(--muted); }
+
+  .response {
+    margin-top: 12px;
+    background: #0b1220;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 320px;
+    overflow-y: auto;
+    display: none;
+  }
+  .response.show { display: block; }
+  .response.success { border-left: 3px solid var(--success); }
+  .response.error { border-left: 3px solid var(--danger); }
+  .response-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .status-pill {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .status-pill.ok { background: var(--success); color: white; }
+  .status-pill.fail { background: var(--danger); color: white; }
+
+  .channel-checkboxes {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--panel-2);
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .channel-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    nav { position: static; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Commerce-AdPilot API 테스트 페이지</h1>
+  <div class="config-bar">
+    <label style="margin: 0;">Base URL:</label>
+    <input type="text" id="baseUrl" value="http://localhost:8000" />
+    <span id="tokenStatus" class="token-status empty">토큰 없음</span>
+    <button class="secondary" onclick="clearToken()">토큰 초기화</button>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h3>엔드포인트</h3>
+    <div class="group-label">기본</div>
+    <a href="#root">루트</a>
+    <div class="group-label">인증</div>
+    <a href="#auth-signup">회원가입</a>
+    <a href="#auth-login">로그인</a>
+    <a href="#auth-logout">로그아웃</a>
+    <a href="#auth-delete">회원 탈퇴</a>
+    <div class="group-label">생성</div>
+    <a href="#gen-normal">단일 생성</a>
+    <a href="#gen-platform">플랫폼 병렬</a>
+    <a href="#gen-csv">CSV 일괄</a>
+    <a href="#gen-status">작업 상태</a>
+    <a href="#gen-preview">결과 미리보기</a>
+    <a href="#gen-retry">실패 재시도</a>
+    <div class="group-label">히스토리</div>
+    <a href="#hist-save">저장</a>
+    <a href="#hist-products">상품 목록</a>
+    <a href="#hist-contents">상품별 콘텐츠</a>
+  </nav>
+
+  <div class="content">
+
+    <!-- ROOT -->
+    <section class="api-group">
+      <h2>기본</h2>
+      <div class="endpoint" id="root">
+        <div class="endpoint-header">
+          <span class="method GET">GET</span>
+          <span class="path">/</span>
+          <span class="desc">서버 헬스체크</span>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="callApi('root', 'GET', '/', null, null)">요청 보내기</button>
+        </div>
+        <div class="response" id="resp-root"></div>
+      </div>
+    </section>
+
+    <!-- AUTH -->
+    <section class="api-group">
+      <h2>인증 (Auth)</h2>
+
+      <div class="endpoint" id="auth-signup">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/auth/signup</span>
+          <span class="desc">회원가입</span>
+        </div>
+        <div class="form-grid">
+          <div><label>이메일</label><input type="email" id="signup-email" placeholder="user@example.com"/></div>
+          <div><label>비밀번호</label><input type="password" id="signup-password" placeholder="••••••••"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="signup()">회원가입</button>
+        </div>
+        <div class="response" id="resp-signup"></div>
+      </div>
+
+      <div class="endpoint" id="auth-login">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/auth/login</span>
+          <span class="desc">로그인 → 토큰 자동 저장</span>
+        </div>
+        <div class="form-grid">
+          <div><label>이메일</label><input type="email" id="login-email" placeholder="user@example.com"/></div>
+          <div><label>비밀번호</label><input type="password" id="login-password" placeholder="••••••••"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="login()">로그인</button>
+        </div>
+        <div class="response" id="resp-login"></div>
+      </div>
+
+      <div class="endpoint" id="auth-logout">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/auth/logout</span>
+          <span class="desc">로그아웃 (저장된 토큰 사용)</span>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="logout()">로그아웃</button>
+        </div>
+        <div class="response" id="resp-logout"></div>
+      </div>
+
+      <div class="endpoint" id="auth-delete">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/auth/deleteUser</span>
+          <span class="desc">회원 탈퇴</span>
+        </div>
+        <div class="form-grid">
+          <div><label>이메일</label><input type="email" id="delete-email"/></div>
+          <div><label>비밀번호</label><input type="password" id="delete-password"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="deleteUser()">탈퇴</button>
+        </div>
+        <div class="response" id="resp-delete"></div>
+      </div>
+    </section>
+
+    <!-- GENERATE -->
+    <section class="api-group">
+      <h2>광고 생성 (Generate)</h2>
+
+      <div class="endpoint" id="gen-normal">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/generate/normal</span>
+          <span class="desc">단일 광고 카피 생성</span>
+        </div>
+        <div class="form-grid">
+          <div><label>톤 (tone)</label><input type="text" id="n-tone" value="친근한"/></div>
+          <div><label>핵심 메시지 (core_message)</label><input type="text" id="n-core" value="가성비 좋은 신제품"/></div>
+          <div><label>금지어 (forbidden_words)</label><input type="text" id="n-forbidden" value=""/></div>
+          <div><label>톤앤매너 (tnm)</label><input type="text" id="n-tnm" value="감성적"/></div>
+          <div><label>길이 (length)</label><input type="text" id="n-length" value="짧게"/></div>
+          <div><label>목적 (purpose)</label><input type="text" id="n-purpose" value="신규 고객 유입"/></div>
+        </div>
+        <div>
+          <label>채널 (channel)</label>
+          <div class="channel-checkboxes" id="n-channel-box">
+            <label><input type="checkbox" value="instagram" checked/>instagram</label>
+            <label><input type="checkbox" value="youtube"/>youtube</label>
+            <label><input type="checkbox" value="facebook"/>facebook</label>
+            <label><input type="checkbox" value="tiktok"/>tiktok</label>
+            <label><input type="checkbox" value="naver"/>naver</label>
+            <label><input type="checkbox" value="default"/>default</label>
+          </div>
+        </div>
+        <div class="form-grid single" style="margin-top: 12px;">
+          <div><label>request_file (선택)</label><input type="text" id="n-request-file" placeholder="추가 컨텍스트 (옵션)"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="generateNormal()">생성</button>
+        </div>
+        <div class="response" id="resp-gen-normal"></div>
+      </div>
+
+      <div class="endpoint" id="gen-platform">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/generate/platform</span>
+          <span class="desc">선택한 플랫폼 모두에 대해 병렬 생성</span>
+        </div>
+        <div class="form-grid">
+          <div><label>톤 (tone)</label><input type="text" id="p-tone" value="전문적인"/></div>
+          <div><label>핵심 메시지</label><input type="text" id="p-core" value="여름 한정 특가 세일"/></div>
+          <div><label>금지어</label><input type="text" id="p-forbidden" value=""/></div>
+          <div><label>톤앤매너</label><input type="text" id="p-tnm" value="신뢰감 있는"/></div>
+          <div><label>길이</label><input type="text" id="p-length" value="중간"/></div>
+          <div><label>목적</label><input type="text" id="p-purpose" value="구매 전환"/></div>
+        </div>
+        <div>
+          <label>채널 (다중 선택)</label>
+          <div class="channel-checkboxes" id="p-channel-box">
+            <label><input type="checkbox" value="instagram" checked/>instagram</label>
+            <label><input type="checkbox" value="youtube" checked/>youtube</label>
+            <label><input type="checkbox" value="facebook"/>facebook</label>
+            <label><input type="checkbox" value="tiktok"/>tiktok</label>
+            <label><input type="checkbox" value="naver"/>naver</label>
+            <label><input type="checkbox" value="default"/>default</label>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="generatePlatform()">병렬 생성</button>
+        </div>
+        <div class="response" id="resp-gen-platform"></div>
+      </div>
+
+      <div class="endpoint" id="gen-csv">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/generate/csv</span>
+          <span class="desc">CSV / Excel 파일 일괄 생성</span>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>파일 (CSV/XLSX)</label>
+            <input type="file" id="csv-file" accept=".csv,.xlsx,.xls"/>
+          </div>
+          <div><label>언어 (language)</label><input type="text" id="csv-language" value="ko"/></div>
+          <div>
+            <label>채널 (channel)</label>
+            <select id="csv-channel">
+              <option value="instagram">instagram</option>
+              <option value="youtube">youtube</option>
+              <option value="facebook">facebook</option>
+              <option value="tiktok">tiktok</option>
+              <option value="naver">naver</option>
+              <option value="default" selected>default</option>
+            </select>
+          </div>
+          <div>
+            <label>비동기 모드 (async_mode)</label>
+            <select id="csv-async">
+              <option value="auto" selected>auto</option>
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+          <div><label>임계값 (async_threshold)</label><input type="number" id="csv-threshold" value="50"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="generateCsv()">업로드 및 생성</button>
+        </div>
+        <div class="response" id="resp-gen-csv"></div>
+      </div>
+
+      <div class="endpoint" id="gen-status">
+        <div class="endpoint-header">
+          <span class="method GET">GET</span>
+          <span class="path">/api/generate/csv/status/{job_id}</span>
+          <span class="desc">비동기 작업 상태 조회</span>
+        </div>
+        <div class="form-grid">
+          <div><label>Job ID</label><input type="text" id="status-jobid" placeholder="csv 업로드 시 자동 저장됨"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="checkStatus()">상태 확인</button>
+          <button class="secondary" onclick="pollStatus()">자동 폴링 (5초마다)</button>
+          <button class="secondary" onclick="stopPolling()">폴링 중지</button>
+        </div>
+        <div class="response" id="resp-gen-status"></div>
+      </div>
+
+      <div class="endpoint" id="gen-preview">
+        <div class="endpoint-header">
+          <span class="method GET">GET</span>
+          <span class="path">/api/generate/csv/preview/{job_id}</span>
+          <span class="desc">완료된 항목 미리보기 (페이징)</span>
+        </div>
+        <div class="form-grid">
+          <div><label>Job ID</label><input type="text" id="preview-jobid"/></div>
+          <div><label>limit</label><input type="number" id="preview-limit" value="10"/></div>
+          <div><label>offset</label><input type="number" id="preview-offset" value="0"/></div>
+          <div>
+            <label>only_success</label>
+            <select id="preview-onlysuccess">
+              <option value="false" selected>false</option>
+              <option value="true">true</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="previewCsv()">미리보기</button>
+        </div>
+        <div class="response" id="resp-gen-preview"></div>
+      </div>
+
+      <div class="endpoint" id="gen-retry">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/generate/csv/retry/{job_id}</span>
+          <span class="desc">실패 항목 재시도</span>
+        </div>
+        <div class="form-grid">
+          <div><label>Job ID</label><input type="text" id="retry-jobid"/></div>
+          <div><label>retry (재시도 횟수)</label><input type="number" id="retry-count" value="2"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="retryCsv()">재시도</button>
+        </div>
+        <div class="response" id="resp-gen-retry"></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="api-group">
+      <h2>히스토리 (History)</h2>
+
+      <div class="endpoint" id="hist-save">
+        <div class="endpoint-header">
+          <span class="method POST">POST</span>
+          <span class="path">/api/history/save</span>
+          <span class="desc">생성된 광고 콘텐츠 저장</span>
+        </div>
+        <div class="form-grid">
+          <div><label>id</label><input type="text" id="save-id" placeholder="UUID 또는 임의 식별자"/></div>
+          <div><label>product_id</label><input type="number" id="save-productid" value="1"/></div>
+          <div><label>platform_type</label><input type="text" id="save-platform" value="instagram"/></div>
+          <div>
+            <label>is_saved</label>
+            <select id="save-issaved">
+              <option value="true" selected>true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+          <div><label>created_at (ISO)</label><input type="text" id="save-createdat" placeholder="2026-05-06T10:00:00Z"/></div>
+        </div>
+        <div class="form-grid single">
+          <div><label>generated_text</label><textarea id="save-text" placeholder="생성된 광고 카피 본문"></textarea></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="historySave()">저장</button>
+        </div>
+        <div class="response" id="resp-hist-save"></div>
+      </div>
+
+      <div class="endpoint" id="hist-products">
+        <div class="endpoint-header">
+          <span class="method GET">GET</span>
+          <span class="path">/api/history/list/product</span>
+          <span class="desc">상품 목록 조회 (페이지)</span>
+        </div>
+        <div class="form-grid">
+          <div><label>page</label><input type="number" id="prod-page" value="1"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="historyProducts()">조회</button>
+        </div>
+        <div class="response" id="resp-hist-products"></div>
+      </div>
+
+      <div class="endpoint" id="hist-contents">
+        <div class="endpoint-header">
+          <span class="method GET">GET</span>
+          <span class="path">/api/history/list/content/{product_id}</span>
+          <span class="desc">상품별 광고 콘텐츠 조회</span>
+        </div>
+        <div class="form-grid">
+          <div><label>product_id</label><input type="number" id="content-productid" value="1"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="action" onclick="historyContents()">조회</button>
+        </div>
+        <div class="response" id="resp-hist-contents"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  // ===== STATE =====
+  let authToken = sessionStorage.getItem("apiToken") || "";
+  let pollInterval = null;
+  updateTokenUI();
+
+  function getBaseUrl() {
+    return document.getElementById("baseUrl").value.replace(/\/$/, "");
+  }
+
+  function updateTokenUI() {
+    const el = document.getElementById("tokenStatus");
+    if (authToken) {
+      el.textContent = "토큰 저장됨 ✓";
+      el.className = "token-status set";
+    } else {
+      el.textContent = "토큰 없음";
+      el.className = "token-status empty";
+    }
+  }
+
+  function clearToken() {
+    authToken = "";
+    sessionStorage.removeItem("apiToken");
+    updateTokenUI();
+  }
+
+  function getCheckedChannels(boxId) {
+    return [...document.querySelectorAll(`#${boxId} input[type=checkbox]:checked`)].map(c => c.value);
+  }
+
+  // ===== CORE FETCH =====
+  async function callApi(key, method, path, body, contentType, queryParams) {
+    const url = new URL(getBaseUrl() + path);
+    if (queryParams) {
+      Object.entries(queryParams).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "") url.searchParams.append(k, v);
+      });
+    }
+    const respEl = document.getElementById("resp-" + key);
+    respEl.className = "response show";
+    respEl.innerHTML = '<div class="response-meta"><span>요청 중...</span></div>';
+
+    const options = { method, headers: {} };
+    if (authToken) options.headers["Authorization"] = "Bearer " + authToken;
+
+    if (body !== null && body !== undefined) {
+      if (body instanceof FormData) {
+        options.body = body;
+      } else {
+        options.headers["Content-Type"] = contentType || "application/json";
+        options.body = typeof body === "string" ? body : JSON.stringify(body);
+      }
+    }
+
+    const start = performance.now();
+    try {
+      const res = await fetch(url.toString(), options);
+      const elapsed = (performance.now() - start).toFixed(0);
+      const text = await res.text();
+      let parsed;
+      try { parsed = JSON.parse(text); } catch { parsed = text; }
+
+      respEl.className = "response show " + (res.ok ? "success" : "error");
+      respEl.innerHTML =
+        `<div class="response-meta">
+          <span><span class="status-pill ${res.ok ? "ok" : "fail"}">${res.status}</span> ${method} ${path}</span>
+          <span>${elapsed}ms</span>
+        </div>` +
+        (typeof parsed === "string" ? escapeHtml(parsed) : escapeHtml(JSON.stringify(parsed, null, 2)));
+      return { ok: res.ok, status: res.status, data: parsed };
+    } catch (err) {
+      respEl.className = "response show error";
+      respEl.innerHTML =
+        `<div class="response-meta"><span><span class="status-pill fail">ERROR</span> ${method} ${path}</span></div>` +
+        `네트워크/CORS 에러: ${escapeHtml(err.message)}\n\n백엔드가 ${getBaseUrl()} 에서 실행 중인지, CORS 설정이 되어 있는지 확인하세요.`;
+      return { ok: false, status: 0, data: null };
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // ===== AUTH =====
+  async function signup() {
+    const body = {
+      email: document.getElementById("signup-email").value,
+      password: document.getElementById("signup-password").value
+    };
+    await callApi("signup", "POST", "/api/auth/signup", body);
+  }
+
+  async function login() {
+    const body = {
+      email: document.getElementById("login-email").value,
+      password: document.getElementById("login-password").value
+    };
+    const r = await callApi("login", "POST", "/api/auth/login", body);
+    if (r.ok && r.data && r.data.token) {
+      authToken = r.data.token;
+      sessionStorage.setItem("apiToken", authToken);
+      updateTokenUI();
+    }
+  }
+
+  async function logout() {
+    if (!authToken) {
+      alert("저장된 토큰이 없습니다. 먼저 로그인하세요.");
+      return;
+    }
+    const r = await callApi("logout", "POST", "/api/auth/logout", null, null, { token: authToken });
+    if (r.ok) clearToken();
+  }
+
+  async function deleteUser() {
+    const body = {
+      email: document.getElementById("delete-email").value,
+      password: document.getElementById("delete-password").value
+    };
+    await callApi("delete", "POST", "/api/auth/deleteUser", body);
+  }
+
+  // ===== GENERATE =====
+  function buildGenerateBody(prefix) {
+    return {
+      tone: document.getElementById(prefix + "-tone").value,
+      core_message: document.getElementById(prefix + "-core").value,
+      forbidden_words: document.getElementById(prefix + "-forbidden").value,
+      channel: getCheckedChannels(prefix + "-channel-box"),
+      tnm: document.getElementById(prefix + "-tnm").value,
+      length: document.getElementById(prefix + "-length").value,
+      purpose: document.getElementById(prefix + "-purpose").value
+    };
+  }
+
+  async function generateNormal() {
+    const body = {
+      request: buildGenerateBody("n"),
+      request_file: document.getElementById("n-request-file").value || ""
+    };
+    await callApi("gen-normal", "POST", "/api/generate/normal", body);
+  }
+
+  async function generatePlatform() {
+    const body = buildGenerateBody("p");
+    await callApi("gen-platform", "POST", "/api/generate/platform", body);
+  }
+
+  async function generateCsv() {
+    const fileEl = document.getElementById("csv-file");
+    if (!fileEl.files || !fileEl.files[0]) {
+      alert("파일을 선택하세요.");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("file", fileEl.files[0]);
+    const params = {
+      language: document.getElementById("csv-language").value,
+      channel: document.getElementById("csv-channel").value,
+      async_mode: document.getElementById("csv-async").value,
+      async_threshold: document.getElementById("csv-threshold").value
+    };
+    const r = await callApi("gen-csv", "POST", "/api/generate/csv", fd, null, params);
+    if (r.ok && r.data && r.data.job_id) {
+      // auto-fill job id in subsequent endpoints
+      document.getElementById("status-jobid").value = r.data.job_id;
+      document.getElementById("preview-jobid").value = r.data.job_id;
+      document.getElementById("retry-jobid").value = r.data.job_id;
+    }
+  }
+
+  async function checkStatus() {
+    const jobId = document.getElementById("status-jobid").value;
+    if (!jobId) { alert("Job ID가 필요합니다."); return; }
+    return await callApi("gen-status", "GET", `/api/generate/csv/status/${jobId}`, null);
+  }
+
+  function pollStatus() {
+    if (pollInterval) clearInterval(pollInterval);
+    checkStatus();
+    pollInterval = setInterval(async () => {
+      const r = await checkStatus();
+      if (r && r.data && (r.data.status === "completed" || r.data.status === "failed")) {
+        stopPolling();
+      }
+    }, 5000);
+  }
+
+  function stopPolling() {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+  }
+
+  async function previewCsv() {
+    const jobId = document.getElementById("preview-jobid").value;
+    if (!jobId) { alert("Job ID가 필요합니다."); return; }
+    const params = {
+      limit: document.getElementById("preview-limit").value,
+      offset: document.getElementById("preview-offset").value,
+      only_success: document.getElementById("preview-onlysuccess").value
+    };
+    await callApi("gen-preview", "GET", `/api/generate/csv/preview/${jobId}`, null, null, params);
+  }
+
+  async function retryCsv() {
+    const jobId = document.getElementById("retry-jobid").value;
+    if (!jobId) { alert("Job ID가 필요합니다."); return; }
+    const params = { retry: document.getElementById("retry-count").value };
+    await callApi("gen-retry", "POST", `/api/generate/csv/retry/${jobId}`, null, null, params);
+  }
+
+  // ===== HISTORY =====
+  async function historySave() {
+    const body = {
+      id: document.getElementById("save-id").value,
+      product_id: parseInt(document.getElementById("save-productid").value, 10),
+      platform_type: document.getElementById("save-platform").value,
+      generated_text: document.getElementById("save-text").value,
+      is_saved: document.getElementById("save-issaved").value === "true",
+      created_at: document.getElementById("save-createdat").value || new Date().toISOString()
+    };
+    await callApi("hist-save", "POST", "/api/history/save", body);
+  }
+
+  async function historyProducts() {
+    const params = { page: document.getElementById("prod-page").value };
+    await callApi("hist-products", "GET", "/api/history/list/product", null, null, params);
+  }
+
+  async function historyContents() {
+    const id = document.getElementById("content-productid").value;
+    await callApi("hist-contents", "GET", `/api/history/list/content/${id}`, null);
+  }
+</script>
+</body>
+</html>
