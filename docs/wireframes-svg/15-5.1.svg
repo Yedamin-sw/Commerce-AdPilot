@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='606' viewBox='0 0 900 606'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='606' />
+  <rect class='frame' x='8' y='8' width='884' height='590' />
+  <text class='title' x='18' y='26'>Section 5.1</text>
+  <text class='txt' x='18' y='54'>+--------------------------------+</text>
+  <text class='txt' x='18' y='78'>| Logo      생성 워크스페이스 [≡] |</text>
+  <text class='txt' x='18' y='102'>|--------------------------------|</text>
+  <text class='txt' x='18' y='126'>| 입력 방식                       |</text>
+  <text class='txt' x='18' y='150'>| (o) 수기 ( ) CSV                |</text>
+  <text class='txt' x='18' y='174'>|--------------------------------|</text>
+  <text class='txt' x='18' y='198'>| 상품명*                         |</text>
+  <text class='txt' x='18' y='222'>| [________________________]      |</text>
+  <text class='txt' x='18' y='246'>| 카테고리*                       |</text>
+  <text class='txt' x='18' y='270'>| [________________________]      |</text>
+  <text class='txt' x='18' y='294'>| 주요 특징*                      |</text>
+  <text class='txt' x='18' y='318'>| [+ 특징 추가]                   |</text>
+  <text class='txt' x='18' y='342'>| 타겟 고객*                      |</text>
+  <text class='txt' x='18' y='366'>| [________________________]      |</text>
+  <text class='txt' x='18' y='390'>|--------------------------------|</text>
+  <text class='txt' x='18' y='414'>| 채널 [블로그/인스타/페북]       |</text>
+  <text class='txt' x='18' y='438'>| 톤 [전문적 v]                   |</text>
+  <text class='txt' x='18' y='462'>|--------------------------------|</text>
+  <text class='txt' x='18' y='486'>| [생성하기]                      |</text>
+  <text class='txt' x='18' y='510'>| [CSV 업로드]                    |</text>
+  <text class='txt' x='18' y='534'>+--------------------------------+</text>
+</svg>
