@@ -2,7 +2,7 @@
 from openai import AsyncOpenAI
 import os
 
-client = AsyncOpenAI(api_key = os.getenv("OPEAI_API_KEY"))
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 async def test():
     response = await client.chat.completions.create(
@@ -17,11 +17,13 @@ async def test():
 #프롬프트를 받아와서 실행
 async def generate_ad(prompt: str):
     try:
-        response = await client.completions.create(
-            model="gpt-3.5-turbo",
-            prompt=prompt
+        response = await client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
         )
-        return True, response.choices[0].text
+        return True, response.choices[0].message.content
     except Exception as e:
         print(f"Error generating ad: {e}")
         return False, "Error generating ad."
