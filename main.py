@@ -21,3 +21,4 @@ app.include_router(history.router,  prefix="/api/history")
 @app.get("/")
 def root():
     return {"message": "The server is running.."}
+

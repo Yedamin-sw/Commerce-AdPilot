@@ -1,10 +1,11 @@
+
 # 사용자 계정 및 인증
 
 #회원가입, 탈퇴
 from fastapi import APIRouter, HTTPException, Depends
 from backend.database import supabase_admin as supabase
 from pydantic import BaseModel
-
+from fastapi.security import OAuth2PasswordBearer
 router = APIRouter()
 
 class User(BaseModel):
