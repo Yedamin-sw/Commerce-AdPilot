@@ -13,17 +13,15 @@ class ad_Content(BaseModel):#저장 양식
     is_saved: bool
     created_at: str
 
-#해당 product에 대한 광고명을 해당 product기준으로 저장?
 @router.post("/save", status_code=201)
 async def save_content(content: ad_Content):
-    #db에 저장해야됨
     try:
         response = supabase.table("ad_contents").insert(content.dict()).execute()
         return {"message": "Content saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-#그럼 대시보드 리스트에는 일단 product만 보여주고 해당 product 클릭시에 광고문 history 보여주는 방식?
+
 # 페이지 네이션
 @router.get("/list/product")
 async def list_content(page: int):
