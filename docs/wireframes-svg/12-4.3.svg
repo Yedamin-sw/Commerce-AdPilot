@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='420' viewBox='0 0 900 420'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='420' />
+  <rect class='frame' x='8' y='8' width='884' height='404' />
+  <text class='title' x='18' y='26'>Section 4.3</text>
+  <text class='txt' x='18' y='54'>[생성 진행 Drawer]</text>
+  <text class='txt' x='18' y='78'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='102'>| 생성 진행 중... 78/200                                                         |</text>
+  <text class='txt' x='18' y='126'>| [====================      ] 39%                                               |</text>
+  <text class='txt' x='18' y='150'>| 채널별 처리: 블로그(완료 62) 인스타그램(완료 58) 페이스북(완료 54)            |</text>
+  <text class='txt' x='18' y='174'>| 예상 남은 시간: 00:35                                                           |</text>
+  <text class='txt' x='18' y='198'>| [백그라운드로 전환] [중단]                                                      |</text>
+  <text class='txt' x='18' y='222'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='246'></text>
+  <text class='txt' x='18' y='270'>[부분 실패 배너]</text>
+  <text class='txt' x='18' y='294'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='318'>| 일부 항목 생성 실패 (4건): 요청 제한 또는 입력 누락. [실패 항목만 재시도]      |</text>
+  <text class='txt' x='18' y='342'>+--------------------------------------------------------------------------------+</text>
+</svg>

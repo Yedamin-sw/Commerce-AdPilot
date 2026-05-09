@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='420' viewBox='0 0 900 420'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='420' />
+  <rect class='frame' x='8' y='8' width='884' height='404' />
+  <text class='title' x='18' y='26'>Section 4.5</text>
+  <text class='txt' x='18' y='54'>+--------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='78'>| 내보내기                                                                  |</text>
+  <text class='txt' x='18' y='102'>|--------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='126'>| 범위: (o) 전체 상품  ( ) 선택 상품  ( ) 현재 상품                         |</text>
+  <text class='txt' x='18' y='150'>| 형식: [TXT v] [CSV v]                                                     |</text>
+  <text class='txt' x='18' y='174'>| 포함 항목: [x] 원본 [x] 수정본 [x] 채널명 [x] 상품명                      |</text>
+  <text class='txt' x='18' y='198'>| 파일명: [campaign_2026_spring_copy__________]                             |</text>
+  <text class='txt' x='18' y='222'>|                                                                          |</text>
+  <text class='txt' x='18' y='246'>| [다운로드] [클립보드 복사] [취소]                                         |</text>
+  <text class='txt' x='18' y='270'>+--------------------------------------------------------------------------+</text>
+</svg>

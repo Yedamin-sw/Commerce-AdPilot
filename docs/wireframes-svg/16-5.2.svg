@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='420' viewBox='0 0 900 420'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='420' />
+  <rect class='frame' x='8' y='8' width='884' height='404' />
+  <text class='title' x='18' y='26'>Section 5.2</text>
+  <text class='txt' x='18' y='54'>+--------------------------------+</text>
+  <text class='txt' x='18' y='78'>| 결과 (12/200)          [내보내기]|</text>
+  <text class='txt' x='18' y='102'>|--------------------------------|</text>
+  <text class='txt' x='18' y='126'>| 상품: 무선청소기 A100            |</text>
+  <text class='txt' x='18' y='150'>|--------------------------------|</text>
+  <text class='txt' x='18' y='174'>| [탭] 블로그 | 인스타 | 페이스북  |</text>
+  <text class='txt' x='18' y='198'>| 원본: ...                       |</text>
+  <text class='txt' x='18' y='222'>| 수정: [텍스트 영역...........]   |</text>
+  <text class='txt' x='18' y='246'>| [복사] [재생성] [저장]           |</text>
+  <text class='txt' x='18' y='270'>|--------------------------------|</text>
+  <text class='txt' x='18' y='294'>| [이전 상품]          [다음 상품]  |</text>
+  <text class='txt' x='18' y='318'>+--------------------------------+</text>
+</svg>

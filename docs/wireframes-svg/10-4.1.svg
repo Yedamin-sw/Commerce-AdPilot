@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='420' viewBox='0 0 900 420'>
+  <defs>
+    <style>
+      .bg { fill: #f4f1e8; }
+      .frame { fill: #fffdf8; stroke: #1f2937; stroke-width: 2; rx: 14; }
+      .txt { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 16px; fill: #111827; white-space: pre; }
+      .title { font-family: "Malgun Gothic", sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect class='bg' x='0' y='0' width='900' height='420' />
+  <rect class='frame' x='8' y='8' width='884' height='404' />
+  <text class='title' x='18' y='26'>Section 4.1</text>
+  <text class='txt' x='18' y='54'>+--------------------------------------------------------------------------------+</text>
+  <text class='txt' x='18' y='78'>| Commerce AdPilot                                             [KR|EN] [바로 시작]|</text>
+  <text class='txt' x='18' y='102'>|--------------------------------------------------------------------------------|</text>
+  <text class='txt' x='18' y='126'>| "상품 정보 한 번 입력으로 채널 카피를 동시에 생성"                                |</text>
+  <text class='txt' x='18' y='150'>|                                                                                |</text>
+  <text class='txt' x='18' y='174'>| [핵심 가치]                                                                     |</text>
+  <text class='txt' x='18' y='198'>| - 평균 작업시간 1시간 -&gt; 10분 수준 단축                                         |</text>
+  <text class='txt' x='18' y='222'>| - 블로그/인스타그램/페이스북 동시 생성                                          |</text>
+  <text class='txt' x='18' y='246'>| - 편집/복사/내보내기 원스톱                                                     |</text>
+  <text class='txt' x='18' y='270'>|                                                                                |</text>
+  <text class='txt' x='18' y='294'>|                            [지금 생성 시작하기]                                 |</text>
+  <text class='txt' x='18' y='318'>+--------------------------------------------------------------------------------+</text>
+</svg>
