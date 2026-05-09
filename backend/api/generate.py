@@ -311,10 +311,6 @@ async def _process_rows(
 ####################################################################
 
 
-###2026-05-04에 여기까지 함
-
-###진행률은 개수를 기반으로 센다. 그러니까 내 말은 많은 입력(파일 입력)이 있을때는 개수를 기반으로 센다
-### 얘는 필요합..
 async def _run_bulk_job(product_id: str):
     job = Products[product_id]
     job["status"] = "running"
@@ -415,7 +411,7 @@ async def get_csv_status(job_id: str):
         raise HTTPException(status_code=404, detail="job not found")
     return _public_view(job, include_results=False)
 
-####2026-05.06 여기 까지 +
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 5) 완료된 항목 미리보기
 #    - 아직 진행 중이라도 지금까지 완료된 결과만 잘라서 반환.
