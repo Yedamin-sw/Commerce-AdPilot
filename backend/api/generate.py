@@ -15,7 +15,7 @@ router = APIRouter()
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 일괄 생성 작업 상태 보관소.
-# 운영에서는 Redis / Supabase 로 옮길 것 (서버 재시작 시 휘발됨).=>난 이게 뭔지 모르겠어. 저장 안하면 없어진다고?
+# 운영에서는 Redis / Supabase 로 옮길 것 (서버 재시작 시 휘발됨)
 Products: dict[str, dict] = {}
 
 # OpenAI 동시 호출 수 제한 (rate limit 보호)
@@ -216,7 +216,7 @@ async def generate_platform(req: request):
 # 3) CSV/엑셀 일괄 생성(입력 파일 읽기)
 #    - 각 행을 asyncio.gather + Semaphore 로 병렬 처리.
 #    - 행 수가 많거나 async_mode=True 면 BackgroundTasks 로 비동기 처리하고
-#      job_id 를 즉시 반환 → 상태/미리보기/재시도 엔드포인트로 후속 조회.=>엔드포인트라는 고급단어 쓰지마라 나 존나 멍청하다
+#      job_id 를 즉시 반환 → 상태/미리보기/재시도 엔드포인트로 후속 조회
 #   job_id 가 아니라 product_id로
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/csv")
