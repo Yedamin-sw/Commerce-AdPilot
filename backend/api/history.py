@@ -17,7 +17,10 @@ class ad_Content(BaseModel):  # ad_contents 테이블 스키마와 동일
 @router.post("/save", status_code=201)
 async def save_content(content: ad_Content):
     try:
-        response = supabase.table("ad_contents").insert(content.dict()).execute()
+        # id, created_at 은 DB 자동 생성이므로 None 으로 보내지 않도록 제외
+        response = supabase.table("ad_contents").insert(
+            content.dict(exclude_none=True)
+        ).execute()
         return {"message": "Content saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

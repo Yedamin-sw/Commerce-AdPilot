@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, HTTPException
 from openai import AsyncOpenAI
 from pydantic import BaseModel
+from typing import Optional
 import pandas as pd
 import io
 import os
@@ -91,12 +92,13 @@ class request(BaseModel):
     length: str
     purpose: str 
 
-#각 상품별 요청(컬럼에서 읽어야함 ','을 기준으로 열거돼있다고 가정 파일을 읽어서 이대로 넣기 수작성 폼일 경우 그대로 사용)    
+#각 상품별 요청(컬럼에서 읽어야함 ','을 기준으로 열거돼있다고 가정 파일을 읽어서 이대로 넣기 수작성 폼일 경우 그대로 사용)
+# products 테이블 스키마와 동일 (category, target_audience 는 NN 아님)
 class request_file(BaseModel):
-    name: str
-    category: str
-    features: str
-    target_audience: str
+    name: str                                  # NN
+    category: Optional[str] = None
+    features: str                              # NN
+    target_audience: Optional[str] = None
 
 
 # 각 컬럼 별로 , 로 된거 리스트로 바꾸기
