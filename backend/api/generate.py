@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, HTTPExce
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 from typing import Optional
+from backend.database import supabase_admin as supabase
 import pandas as pd
 import io
 import os
@@ -10,6 +11,31 @@ import uuid
 import time
 
 router = APIRouter()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 생성 결과 자동 저장 (ad_contents 테이블)
+# product_id 가 있어야 저장 가능 (NN FK). 없으면 스킵.
+# DB 저장은 best-effort: 실패해도 생성 결과 자체는 반환한다.
+# ──────────────────────────────────────────────────────────────────────────────
+def _save_ad_content(
+    product_id: Optional[int],
+    platform_type: str,
+    generated_text: str,
+) -> Optional[dict]:
+    if not product_id:
+        return None
+    try:
+        resp = supabase.table("ad_contents").insert({
+            "product_id": int(product_id),
+            "platform_type": platform_type or "default",
+            "generated_text": generated_text,
+            "is_saved": False,
+        }).execute()
+        return resp.data[0] if resp.data else None
+    except Exception as e:
+        print(f"[WARN] ad_contents auto-save failed: {e}")
+        return None
 
 # AsyncOpenAI 사용 → asyncio.gather 로 병렬 호출 가능
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -80,8 +106,10 @@ def build_prompt(
     
 
 
-# 요청 모델(파일을 읽을때로 하면 되나??)
+# 요청 모델
 class request(BaseModel):
+    # 자동 저장용 (있으면 ad_contents 에 자동 insert, 없으면 생성만)
+    product_id: Optional[int] = None
     # 팀 가이드 부문
     tone: str
     core_message: str
@@ -90,7 +118,7 @@ class request(BaseModel):
     channel: list[str]
     tnm: str
     length: str
-    purpose: str 
+    purpose: str
 
 #각 상품별 요청(컬럼에서 읽어야함 ','을 기준으로 열거돼있다고 가정 파일을 읽어서 이대로 넣기 수작성 폼일 경우 그대로 사용)
 # products 테이블 스키마와 동일 (category, target_audience 는 NN 아님)
@@ -156,7 +184,7 @@ async def _call_openai(#프롬프트로 넣으면 될듯
 @router.post("/normal")
 async def generate_normal(req: request, req1: request_file):
     print("[DEBUG] generate_normal")
-    user_content = _format_user_content(req.dict())
+    user_content = _format_user_content(req1.dict())
 
     semaphore = asyncio.Semaphore(1)
     prompt = build_prompt(
@@ -173,7 +201,17 @@ async def generate_normal(req: request, req1: request_file):
         user_content=user_content,
         semaphore=semaphore
     )
-    return {"ok": ok, "result": text}
+
+    # 생성 성공 시 ad_contents 에 자동 저장 (product_id 있을 때만)
+    saved = None
+    if ok:
+        ch = req.channel[0] if req.channel else "default"
+        saved = _save_ad_content(
+            product_id=req.product_id,
+            platform_type=ch,
+            generated_text=text,
+        )
+    return {"ok": ok, "result": text, "saved": saved}
 
 
 
@@ -187,29 +225,36 @@ async def generate_platform(req: request):
     print("[DEBUG] generate_platform")
     channels = req.channel or ["default"]
     user_content = _format_user_content(req.dict())
-    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)   # 밖에서 1번
-    tasks = []                                       # 밖에서 1번
+    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
+    tasks = []
 
     for ch in channels:
         prompt = build_prompt(
             tone=req.tone,
             core_message=req.core_message,
             forbidden_words=req.forbidden_words,
-            channel=[ch.strip().lower()],            # 리스트로 감싸서
+            channel=[ch.strip().lower()],
             tnm=req.tnm,
             length=req.length,
             purpose=req.purpose,
         )
-        tasks.append(_call_openai(prompt, user_content, semaphore))   # = 가 아니라 append
+        tasks.append(_call_openai(prompt, user_content, semaphore))
 
-    pairs = await asyncio.gather(*tasks) #병렬 실행
+    pairs = await asyncio.gather(*tasks)
 
-    return {
-        "results": [
-            {"channel": ch, "ok": ok, "text": txt}
-            for ch, (ok, txt) in zip(channels, pairs)
-        ]
-    }
+    # 채널별 결과 + 자동 저장
+    results = []
+    for ch, (ok, txt) in zip(channels, pairs):
+        saved = None
+        if ok:
+            saved = _save_ad_content(
+                product_id=req.product_id,
+                platform_type=ch,
+                generated_text=txt,
+            )
+        results.append({"channel": ch, "ok": ok, "text": txt, "saved": saved})
+
+    return {"results": results}
 #2026-05-03에 여기까지
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -225,6 +270,7 @@ async def generate_csv(
     file: UploadFile = File(...),
     language: str = Form("ko"),
     channel: str | None = Form(None),  # CSV 행에 channel 컬럼이 없을 때 쓸 기본 채널
+    default_product_id: Optional[int] = Form(None),  # CSV 행에 product_id 컬럼이 없을 때 쓸 기본 product_id
     async_mode: bool = Form(False),
     async_threshold: int = Form(50),
 ):
@@ -247,7 +293,7 @@ async def generate_csv(
 
     # 큰 파일은 비동기 처리, job_id 즉시 반환
     if async_mode or len(rows) > async_threshold:
-        job_id = _create_job(rows, language, channel)
+        job_id = _create_job(rows, language, channel, default_product_id)
         background_tasks.add_task(_run_bulk_job, job_id)
         return {
             "job_id": job_id,
@@ -257,14 +303,19 @@ async def generate_csv(
         }
 
     # 작은 파일은 즉시 병렬 처리
-    results = await _process_rows(rows, language, channel)
+    results = await _process_rows(rows, language, channel, default_product_id)
     return {"results": results, "total": len(results)}
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 일괄 작업 관리용 내부 함수 (생성된 결과물의 성공/실패를 기록하고 실패한 것이 있다면 여기서 특정해서 재시도 할 수 있도록 한다.)
 # ──────────────────────────────────────────────────────────────────────────────
-def _create_job(rows: list[dict], language: str, channel: str | None) -> str:
+def _create_job(
+    rows: list[dict],
+    language: str,
+    channel: str | None,
+    default_product_id: Optional[int] = None,
+) -> str:
     product_id = str(uuid.uuid4())
     Products[product_id] = {
         "status": "queued",            # queued | running | completed | failed
@@ -272,13 +323,14 @@ def _create_job(rows: list[dict], language: str, channel: str | None) -> str:
         "done": 0,
         "success": 0,
         "failed": 0,
-        "results": [],                 # [{index, input, ok, result}]
+        "results": [],                 # [{index, input, ok, result, saved}]
         "started_at": None,
         "finished_at": None,
         # 재시도용으로 원본 입력 보관
         "_rows": rows,
         "_language": language,
         "_channel": channel,
+        "_default_product_id": default_product_id,
     }
     return product_id
 
@@ -287,6 +339,7 @@ async def _process_rows(
     rows: list[dict],
     language: str,
     default_channel: str | None,
+    default_product_id: Optional[int] = None,
 ) -> list[dict]:
     """동기 응답용: CSV 행들을 병렬 처리해서 결과 리스트 반환."""
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
@@ -307,7 +360,16 @@ async def _process_rows(
             user_content=_format_user_content(row),
             semaphore=semaphore,
         )
-        return {"index": i, "input": row, "ok": ok, "result": text}
+        # 자동 저장: 행에 product_id 컬럼이 있으면 그걸, 없으면 default_product_id
+        saved = None
+        if ok:
+            row_pid = row.get("product_id") or default_product_id
+            saved = _save_ad_content(
+                product_id=row_pid,
+                platform_type=row_channel,
+                generated_text=text,
+            )
+        return {"index": i, "input": row, "ok": ok, "result": text, "saved": saved}
 
     return await asyncio.gather(*[_one(i, r) for i, r in enumerate(rows)])
 ####################################################################
@@ -320,7 +382,7 @@ async def _run_bulk_job(product_id: str):
     rows = job["_rows"]
     language = job["_language"]
     default_channel = job["_channel"]
-    
+    default_product_id = job.get("_default_product_id")
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
@@ -328,11 +390,11 @@ async def _run_bulk_job(product_id: str):
     async def _one(i: int, row: dict):
         row_channel = (row.get("channel") or default_channel or "default").strip().lower()
 
-        prompt = build_prompt(                     # ← 행마다 프롬프트 새로 만듦
+        prompt = build_prompt(
             tone=row.get("tone", ""),
             core_message=row.get("core_message", ""),
             forbidden_words=row.get("forbidden_words", ""),
-            channel=row_channel,                   # ← 단일 채널 (build_prompt 시그니처 정리한 후 기준)
+            channel=row_channel,
             tnm=row.get("tnm", ""),
             length=row.get("length", ""),
             purpose=row.get("purpose", ""),
@@ -346,7 +408,17 @@ async def _run_bulk_job(product_id: str):
             retry=DEFAULT_RETRY,
         )
 
-        job["results"].append({"index": i, "input": row, "ok": ok, "result": text})
+        # 자동 저장: 행 product_id 우선, 없으면 job 기본값
+        saved = None
+        if ok:
+            row_pid = row.get("product_id") or default_product_id
+            saved = _save_ad_content(
+                product_id=row_pid,
+                platform_type=row_channel,
+                generated_text=text,
+            )
+
+        job["results"].append({"index": i, "input": row, "ok": ok, "result": text, "saved": saved})
         job["done"] = len(job["results"])
         if ok:
             job["success"] += 1
@@ -481,19 +553,21 @@ async def _retry_failed_items(job_id: str, retry: int):
     job["finished_at"] = None
     language = job["_language"]
     default_channel = job["_channel"]
+    default_product_id = job.get("_default_product_id")
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
     failed_indices = [r["index"] for r in job["results"] if not r["ok"]]
 
     async def _one(idx: int):
         row = job["_rows"][idx]
-        row_channel = row.get("channel") or default_channel
-        ok, text = await _call_openai(##############여기
+        row_channel_raw = row.get("channel") or default_channel
+        row_channel = (str(row_channel_raw).strip().lower() if row_channel_raw else "default")
+        ok, text = await _call_openai(
             prompt=build_prompt(
                 tone=row.get("tone", ""),
                 core_message=row.get("core_message", ""),
                 forbidden_words=row.get("forbidden_words", ""),
-                channel=str(row_channel) if row_channel else None,
+                channel=row_channel,
                 tnm=row.get("tnm", ""),
                 length=row.get("length", ""),
                 purpose=row.get("purpose", ""),
@@ -502,12 +576,25 @@ async def _retry_failed_items(job_id: str, retry: int):
             semaphore=semaphore,
             retry=retry,
         )
+
+        # 재시도 성공 시 자동 저장
+        saved = None
+        if ok:
+            row_pid = row.get("product_id") or default_product_id
+            saved = _save_ad_content(
+                product_id=row_pid,
+                platform_type=row_channel,
+                generated_text=text,
+            )
+
         # 기존 결과를 in-place 갱신
         for r in job["results"]:
             if r["index"] == idx:
                 was_failed = not r["ok"]
                 r["ok"] = ok
                 r["result"] = text
+                if saved is not None:
+                    r["saved"] = saved
                 if ok and was_failed:
                     job["success"] += 1
                     job["failed"] -= 1
