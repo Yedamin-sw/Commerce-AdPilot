@@ -56,7 +56,7 @@ DEFAULT_RETRY = 2
 # 채널이 정해지면 해당 채널의 톤/길이/포맷 규칙을 system prompt 에 주입.
 # (line 74 주석: "플랫폼 설정시 해당 플랫폼에 맞는 문구 생성하도록 하기")
 # ──────────────────────────────────────────────────────────────────────────────
-PLATFORM: dict[str, str] = {#이거 프롬프트 숨기기
+PLATFORM: dict[str, str] = {
     "instagram": (
         "Instagram 피드용. 짧고 감각적인 광고 문구 1~2문장 + 핵심 해시태그 3~5개. "
         "이모지를 적극 활용하고 시각적 호기심을 자극할 것."
@@ -80,28 +80,150 @@ PLATFORM: dict[str, str] = {#이거 프롬프트 숨기기
     "default": "일반적인 광고 문구. 간결하고 매력적으로, 2~3문장.",
 }
 
-# 선택된 항목들로 프롬프트 조합해서 반환하는 함수. generate 엔드포인트에서 사용.
-## 프롬프트를 채널 당 하나씩만 생성한다.
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Persona (Role) Prompting
+# AI 에게 명확한 전문가 역할을 부여해서 결과물의 품질과 일관성을 끌어올린다.
+# ──────────────────────────────────────────────────────────────────────────────
+PERSONA = (
+    "You are a senior e-commerce marketing copywriter with 15+ years of experience.\n"
+    "You specialize in writing platform-optimized ad copy that drives engagement and conversions\n"
+    "across Instagram, YouTube, Facebook, TikTok, and Naver.\n"
+    "\n"
+    "Your expertise:\n"
+    "- Korean and international consumer psychology\n"
+    "- Each platform's unique tone, format, and audience expectations\n"
+    "- Translating product features into emotional hooks and customer benefits\n"
+    "- Brand voice consistency\n"
+    "\n"
+    "Strict rules you must always follow:\n"
+    "1. Match the language of the input data (Korean input -> Korean output).\n"
+    "2. NEVER use any of the forbidden words listed in the team guide.\n"
+    "3. Reflect the requested tone, core message, length, and purpose exactly.\n"
+    "4. Adapt format and length to the target platform's conventions.\n"
+    "5. Output ONLY the ad copy itself. No preamble, no explanation, no meta commentary."
+)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Few-Shot Prompting
+# 채널별로 (input -> output) 예시를 1건씩 제공해서 원하는 형식을 학습시킨다.
+# 예시의 톤/길이/해시태그 개수가 곧 출력의 기준이 된다.
+# ──────────────────────────────────────────────────────────────────────────────
+FEW_SHOT_EXAMPLES: dict[str, str] = {
+    "instagram": (
+        "Example:\n"
+        "Input:\n"
+        "  name: 무선 이어폰 ZenBuds\n"
+        "  category: 전자기기/이어폰\n"
+        "  features: 24시간 배터리, 노이즈캔슬링, 방수\n"
+        "  target_audience: 20~30대 출퇴근 직장인\n"
+        "Output:\n"
+        "  하루를 통째로 함께할 사운드 🎧\n"
+        "  ZenBuds로 출근길도 운동도 끊김 없이.\n"
+        "  #무선이어폰 #출근템 #노이즈캔슬링 #ZenBuds"
+    ),
+    "youtube": (
+        "Example:\n"
+        "Input:\n"
+        "  name: 무선 이어폰 ZenBuds\n"
+        "  category: 전자기기/이어폰\n"
+        "  features: 24시간 배터리, 노이즈캔슬링, 방수\n"
+        "  target_audience: 20~30대 출퇴근 직장인\n"
+        "Output:\n"
+        "  매일 충전하는 거, 이제 지치셨죠?\n"
+        "  ZenBuds는 한 번 충전으로 24시간을 갑니다. 노이즈캔슬링으로 출퇴근길 소음도 깔끔하게,\n"
+        "  갑자기 비가 와도 걱정 없는 방수 설계까지.\n"
+        "  지금 영상 설명란 링크에서 확인하세요. 좋아요 & 구독 부탁드립니다."
+    ),
+    "facebook": (
+        "Example:\n"
+        "Input:\n"
+        "  name: 프리미엄 무선청소기 A100\n"
+        "  category: 가전/청소기\n"
+        "  features: 강력한 흡입력, 60분 연속 사용, 저소음 설계\n"
+        "  target_audience: 30~50대 1인/가족 가구\n"
+        "Output:\n"
+        "  매일 쓰는 청소기, 이제 무게도 소음도 신경 쓰지 마세요.\n"
+        "  프리미엄 무선청소기 A100은 가벼운 본체에 강력한 흡입력을 담았습니다.\n"
+        "  한 번 충전으로 60분, 집 안 구석구석을 조용히 정리할 수 있습니다.\n"
+        "  소중한 가족의 시간을 청소에 빼앗기지 않도록, A100이 도와드립니다."
+    ),
+    "tiktok": (
+        "Example:\n"
+        "Input:\n"
+        "  name: 무선 이어폰 ZenBuds\n"
+        "  category: 전자기기/이어폰\n"
+        "  features: 24시간 배터리, 노이즈캔슬링, 방수\n"
+        "  target_audience: 20~30대 출퇴근 직장인\n"
+        "Output:\n"
+        "  충전 하루 한 번? 우린 일주일 한 번 ✨ #ZenBuds #출근템 #무선이어폰추천"
+    ),
+    "naver": (
+        "Example:\n"
+        "Input:\n"
+        "  name: 프리미엄 무선청소기 A100\n"
+        "  category: 가전/청소기\n"
+        "  features: 강력한 흡입력, 60분 연속 사용, 저소음 설계\n"
+        "  target_audience: 30~50대 1인/가족 가구\n"
+        "Output:\n"
+        "  프리미엄 무선청소기 A100, 강력한 흡입력으로 미세먼지까지 깔끔하게 제거합니다.\n"
+        "  60분 연속 사용 가능한 대용량 배터리로 집 전체를 한 번에 청소할 수 있고,\n"
+        "  저소음 설계 덕분에 늦은 시간에도 부담 없이 사용 가능합니다.\n"
+        "  1인 가구부터 가족 단위 가정까지 모두에게 적합한 무선청소기, A100을 만나보세요.\n"
+        "  #무선청소기 #프리미엄청소기 #A100 #저소음청소기"
+    ),
+    "default": (
+        "Example:\n"
+        "Input:\n"
+        "  name: 무선 이어폰 ZenBuds\n"
+        "  category: 전자기기/이어폰\n"
+        "  features: 24시간 배터리, 노이즈캔슬링, 방수\n"
+        "  target_audience: 20~30대 직장인\n"
+        "Output:\n"
+        "  24시간 동행하는 사운드, ZenBuds.\n"
+        "  노이즈캔슬링으로 출퇴근길도 운동도 더 몰입감 있게 즐기세요."
+    ),
+}
+
+
+# 선택된 항목들로 프롬프트 조합. PERSONA + 플랫폼 스타일 + Few-shot 예시 + 팀 가이드 + 옵션.
 def build_prompt(
     tone: str, core_message: str,
     forbidden_words: str, channel,
     tnm: str, length: str, purpose: str):
 
-    print("[DEBUG] build_prompt")
-
-    base = "you are marketing expert having high understaing about marketing trend for variant customer segments make ad copy having following this information and treat language the same as a document"
     # channel이 리스트로 넘어오는 경우 첫 번째 값 사용
     if isinstance(channel, list):
         channel = channel[0] if channel else "default"
     if not channel or channel.strip().lower() not in PLATFORM:
         channel = "default"
     channel = channel.strip().lower()
-    
-    team_guide = f"tone: {tone}, core message: {core_message}, forbidden words: {forbidden_words}"
-    option = f"channel: {channel}, tone and manner: {tnm}, length:{length}, purpose: {purpose}"#채널에 따라 적용가능?
-    style = PLATFORM.get(channel, PLATFORM["default"])#추가 조건 딕셔너리
-    
-    return f"{base}\nteam guide: {team_guide}\n option: {option}\n condition: {style}"
+
+    style = PLATFORM.get(channel, PLATFORM["default"])
+    example = FEW_SHOT_EXAMPLES.get(channel, FEW_SHOT_EXAMPLES["default"])
+
+    team_guide = (
+        f"- Tone: {tone}\n"
+        f"- Core message: {core_message}\n"
+        f"- Forbidden words (NEVER use these): {forbidden_words}"
+    )
+    options = (
+        f"- Target channel: {channel}\n"
+        f"- Tone & manner: {tnm}\n"
+        f"- Length: {length}\n"
+        f"- Purpose: {purpose}"
+    )
+
+    return (
+        f"{PERSONA}\n\n"
+        f"## Platform style ({channel})\n{style}\n\n"
+        f"## Few-shot example (follow this format and tone)\n{example}\n\n"
+        f"## Team guide\n{team_guide}\n\n"
+        f"## Options\n{options}\n\n"
+        f"Now generate the ad copy for the product info that will be provided next. "
+        f"Output ONLY the copy."
+    )
     # 만든 프롬프트를 OpenAI에 넘기기
     
 
@@ -147,7 +269,7 @@ def _format_user_content(row: dict) -> str:
     )
 
 
-async def _call_openai(#프롬프트로 넣으면 될듯
+async def _call_openai(
     prompt: str,
     user_content: str,
     semaphore: asyncio.Semaphore,# 개수 제한
@@ -175,8 +297,6 @@ async def _call_openai(#프롬프트로 넣으면 될듯
         if attempt < retry:
             await asyncio.sleep(2 ** attempt)
     return False, f"[ERROR] {last_err}"
-
-####2026-05-02 에 여기까지 함 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1) 일반 텍스트 폼으로 광고 문구 생성(팀가이드, 옵션, 상품폼)
