@@ -375,7 +375,6 @@ async def generate_platform(req: request):
         results.append({"channel": ch, "ok": ok, "text": txt, "saved": saved})
 
     return {"results": results}
-#2026-05-03에 여기까지
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 3) CSV/엑셀 일괄 생성(입력 파일 읽기)
