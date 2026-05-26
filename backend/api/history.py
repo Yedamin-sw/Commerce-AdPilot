@@ -1,26 +1,21 @@
-
-# 콘텐츠 저장
+# 콘텐츠 저장 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
 from backend.database import supabase_admin as supabase
 router = APIRouter()
 
-class ad_Content(BaseModel):  # ad_contents 테이블 스키마와 동일
-    id: Optional[int] = None             # DB 자동 생성 (integer)
-    product_id: int                      # NN, products.id FK
-    platform_type: str                   # NN
-    generated_text: str                  # NN
-    is_saved: Optional[bool] = False
-    created_at: Optional[str] = None     # DB 자동 생성 (timestamp)
+class ad_Content(BaseModel):#저장 양식
+    id: str
+    product_id: int
+    platform_type: str
+    generated_text: str
+    is_saved: bool
+    created_at: str
 
 @router.post("/save", status_code=201)
 async def save_content(content: ad_Content):
     try:
-        # id, created_at 은 DB 자동 생성이므로 None 으로 보내지 않도록 제외
-        response = supabase.table("ad_contents").insert(
-            content.dict(exclude_none=True)
-        ).execute()
+        response = supabase.table("ad_contents").insert(content.dict()).execute()
         return {"message": "Content saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -1,10 +1,81 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Zap, Clock, Share2, MousePointerClick, ChevronRight } from 'lucide-react';
+import { Zap, Clock, Share2, MousePointerClick } from 'lucide-react';
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [responseText, setResponseText] = useState('');
+  const [errorText, setErrorText] = useState('');
+
+  const samplePayload = {
+    brand_guide: {
+      default_tone: '신뢰도 높고 과학적 근거 기반의 전문적 톤',
+      core_messages: ['임상 근거 기반 정보 전달'],
+      required_phrases: ['의료진과 상담이 필요합니다'],
+      banned_phrases: ['완치 보장', '부작용 없음'],
+      mandatory_disclaimer:
+        '본 정보는 일반적인 의약 정보이며, 개인별 적용은 의료진의 판단이 필요합니다.',
+    },
+    compliance_guide: {
+      must_include: ['부작용 또는 주의사항 고지'],
+      must_avoid: ['과장/단정 표현'],
+      regulatory_notes: '의약품 광고 및 표시 관련 법규를 준수',
+    },
+    channel_selection: ['blog', 'instagram', 'facebook'],
+    tone_mode: 'medical_professional',
+    channel_limits: {
+      blog_max_chars: 500,
+      instagram_max_chars: 220,
+      facebook_max_chars: 320,
+    },
+    products: [
+      {
+        product_id: 'DRUG001',
+        name: '예시 의약품명',
+        indication: '허가된 적응증',
+        clinical_data_summary: '입력된 임상 근거 요약',
+        adverse_reactions: ['주요 이상반응 또는 주의사항'],
+        contraindications: ['금기사항'],
+        target_audience: '환자',
+        extra_context: '강조할 포인트',
+        mandatory_safety_statement: '반드시 포함해야 하는 안전성 문구',
+      },
+    ],
+  };
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
+
+  async function handleRunPrompt() {
+    console.log('버튼 클릭됨!');
+    setIsLoading(true);
+    setErrorText('');
+    setResponseText('');
+
+    try {
+      const response = await fetch(`${backendUrl}/api/generate/multichannel-copy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(samplePayload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.detail || '요청 실패');
+      }
+
+      setResponseText(JSON.stringify(data, null, 2));
+    } catch (error) {
+      setErrorText(error instanceof Error ? error.message : '알 수 없는 오류');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans text-slate-900">
       
@@ -46,6 +117,47 @@ export default function Home() {
         >
           지금 생성 시작하기
         </Link>
+
+        <div className="mt-8 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-lg p-6 text-left">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-600">API Test</p>
+              <h2 className="mt-2 text-xl font-extrabold text-slate-900">버튼 한 번으로 백엔드 호출</h2>
+              <p className="mt-2 text-sm text-slate-500">
+                아래 버튼을 누르면 Next.js에서 FastAPI의 <span className="font-semibold text-slate-700">/api/generate/multichannel-copy</span>를 호출합니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRunPrompt}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoading ? '생성 중...' : '프롬프트 테스트 실행'}
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">요청 샘플</p>
+              <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs leading-6 text-slate-700">
+                {JSON.stringify(samplePayload, null, 2)}
+              </pre>
+            </div>
+            <div className="rounded-2xl bg-slate-950 p-4 text-white">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">응답</p>
+              {errorText ? (
+                <p className="text-sm leading-6 text-rose-300">{errorText}</p>
+              ) : responseText ? (
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs leading-6 text-emerald-200">
+                  {responseText}
+                </pre>
+              ) : (
+                <p className="text-sm leading-6 text-slate-400">버튼을 눌러 응답을 확인하세요.</p>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* 서비스 미리보기 이미지 영역 (피그마의 어두운 대시보드 부분) */}
         <div className="mt-20 w-full max-w-5xl px-4">
