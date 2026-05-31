@@ -1,13 +1,22 @@
+import os
+import sys
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import generate
 from dotenv import load_dotenv
-import os
-from pathlib import Path
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from backend.api import generate
 
 # 명시적으로 .env 파일 경로 지정
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
+
+try:
     from backend.api import auth, history, product
 except Exception:
     auth = None
@@ -15,9 +24,10 @@ except Exception:
     product = None
 
 app = FastAPI()
+
 # Load local .env (no-op if file missing)
 load_dotenv()
-# backend(uvicorn) = "http://localhost:8000"
+
 # CORS 설정 (Next.js 프론트엔드 허용)
 app.add_middleware(
     CORSMiddleware,

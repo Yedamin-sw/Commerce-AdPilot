@@ -26,7 +26,7 @@ export default function ResultPage() {
       {/* --- [1] 왼쪽 사이드바 (공통) --- */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col p-6">
         <div className="mb-10 px-2">
-          <Link href="/" className="text-xl font-bold text-slate-800">Commerce AdPilot</Link>
+          <Link href="/" className="text-xl font-bold text-slate-800">Bioverse</Link>
         </div>
 
         <nav className="flex-1 space-y-8">
@@ -74,7 +74,7 @@ export default function ResultPage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-800">생성 진행 중... 78/200</h3>
-                <p className="text-xs text-slate-400">Real-time AI Content Architecture</p>
+                <p className="text-xs text-slate-400">Real-time Pharmaceutical Advertisement Generation</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -95,7 +95,7 @@ export default function ResultPage() {
         {/* --- 결과 리스트 헤더 --- */}
         <div className="flex justify-between items-end mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-1">생성 결과 (총 200건)</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-1">광고 생성 결과 (총 200건)</h2>
             <p className="text-sm text-slate-400 leading-tight">Review and edit your generated ad copies<br/>across multiple channels.</p>
           </div>
           <div className="flex gap-3 items-center">
@@ -125,14 +125,14 @@ export default function ResultPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                   <h4 className="text-lg font-bold text-slate-800">Premium Wireless Vacuum A100</h4>
+                   <h4 className="text-lg font-bold text-slate-800">타이레놀정 500mg</h4>
                    <span className="px-2 py-0.5 bg-green-100 text-green-600 text-[10px] font-bold rounded-md">DONE</span>
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-tight">ID: PROD-9921-A100 • Updated 2 mins ago</p>
+                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-tight">ID: DRUG-500-TYL • Generated 2 mins ago</p>
               </div>
             </div>
             <button className="flex items-center gap-2 text-blue-600 text-xs font-bold hover:underline">
-               <RefreshCw size={14} /> Regenerate this product
+               <RefreshCw size={14} /> 광고 문구 재생성
             </button>
           </div>
 
@@ -147,13 +147,14 @@ export default function ResultPage() {
                </div>
                <div>
                   <p className="text-[10px] font-bold text-slate-300 uppercase mb-2">Original Content</p>
-                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl">강력한 흡입력과 가벼운 무게의 무선 청소기 A100입니다. 45분 연속 사용이 가능하며...</p>
+                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl">고함량 활성비타민 B군이 들어간 피로회복제입니다. 만성 피로와 눈의 피로에 좋으며 하루 한 알 복용합니다.</p>
                </div>
                <div>
                   <p className="text-[10px] font-bold text-blue-500 uppercase mb-2 italic">Edited (AI Enhanced)</p>
                   <div className="text-xs text-slate-700 leading-relaxed border border-blue-100 p-4 rounded-xl shadow-sm bg-blue-50/10">
-                     압도적인 흡입력, 그럼에도 믿기지 않는 가벼움. 무선 청소기의 새로운 기준 A100.<br/><br/>
-                     한 번의 충전으로 집안 곳곳 45분간 빈틈없이...
+                     [건강정보] 만성 피로의 원인과 활성비타민 B군의 역할 💊<br/><br/>
+                     현대 직장인들이 겪는 육체피로와 눈의 피로 완화에 도움을 주는 고함량 배합 정보입니다.<br/><br/>
+                     *본 정보는 일반적인 의약 정보이며, 개인별 증상에 따른 적용은 의료진의 판단이 필요합니다.
                   </div>
                </div>
             </div>
@@ -168,14 +169,14 @@ export default function ResultPage() {
                </div>
                <div>
                   <p className="text-[10px] font-bold text-slate-300 uppercase mb-2">Original Content</p>
-                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl">A100 무선 청소기 출시! 가볍고 강합니다. 화이트 컬러로 예뻐요.</p>
+                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl">피로회복 비타민 출시! 바쁜 직장인들 하루 한 알로 피로 회복하세요. 부작용 주의.</p>
                </div>
                <div>
                   <p className="text-[10px] font-bold text-blue-500 uppercase mb-2 italic">Edited (AI Enhanced)</p>
                   <div className="text-xs text-slate-700 leading-relaxed border border-blue-100 p-4 rounded-xl shadow-sm bg-blue-50/10">
-                     청소기도 인테리어니까 ✨<br/>
-                     어디에 두어도 빛나는 A100의 미니멀 디자인.<br/><br/>
-                     손목 무리 없는 초경량 바디에 숨겨진 강력한 파워!
+                     매일 아침 무거운 몸, 아직도 카페인으로 버티시나요? ☕❌<br/><br/>
+                     바쁜 일상 속, 단 하루 한 알로 채우는 활력 에너지정!<br/><br/>
+                     ⚠️ 구토, 설사 등 이상반응 발생 시 복용을 중단하고 전문가와 상담하세요. #일반의약품 #피로회복
                   </div>
                </div>
             </div>
@@ -190,13 +191,14 @@ export default function ResultPage() {
                </div>
                <div>
                   <p className="text-[10px] font-bold text-slate-300 uppercase mb-2">Original Content</p>
-                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl">[신제품] 프리미엄 무선 청소기 A100. 가볍고 강력한 흡입력을 경험하세요.</p>
+                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl">[신제품] 프리미엄 활성 비타민 B군 배합. 현대인을 위한 맞춤형 육체피로 완화 솔루션.</p>
                </div>
                <div>
                   <p className="text-[10px] font-bold text-blue-500 uppercase mb-2 italic">Edited (AI Enhanced)</p>
                   <div className="text-xs text-slate-700 leading-relaxed border border-blue-100 p-4 rounded-xl shadow-sm bg-blue-50/10">
-                     [EVENT] 청소가 즐거워지는 마법, A100 런칭 기념 공유 이벤트 🎁<br/><br/>
-                     아직도 무거운 청소기로 고생하시나요? 1.2kg 초경량 무게로 가볍게!
+                     [제약 마케팅 뉴스] 임상 근거 기반의 활성비타민 B군 배합 신제품 가이드 📊<br/><br/>
+                     체력저하와 만성 눈의 피로에 시달리는 수험생 및 직장인을 위한 맞춤형 성분 분석 정보를 확인해 보세요.<br/><br/>
+                     정해진 용법과 용량을 반드시 준수해 주시기 바랍니다.
                   </div>
                </div>
             </div>
@@ -204,13 +206,26 @@ export default function ResultPage() {
 
           <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
              <div className="flex gap-4">
-                <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 transition hover:bg-blue-700">Save changes</button>
-                <button className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition">Regenerate selected channels</button>
+                <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 transition hover:bg-blue-700">결과 저장</button>
+                <button className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition">선택 채널 재생성</button>
              </div>
              <button className="flex items-center gap-2 text-slate-800 font-bold text-sm hover:text-blue-600 transition">
-                Next Product <ChevronRight size={18}/>
+                다음 의약품 <ChevronRight size={18}/>
              </button>
           </div>
+        </div>
+
+        <div className="m-6 p-5 bg-amber-50 border border-amber-200 rounded-2xl">
+          <h4 className="font-bold text-amber-800 mb-2">
+            광고 규정 검토 결과
+          </h4>
+
+          <ul className="text-sm text-amber-700 space-y-1">
+            <li>✓ 과장 표현 없음</li>
+            <li>✓ 금지 문구 없음</li>
+            <li>✓ 안전성 안내 문구 포함</li>
+            <li>✓ 의료진 상담 권고 문구 포함</li>
+          </ul>
         </div>
 
         {/* --- 하단 로딩 중인 카드 미리보기 --- */}
