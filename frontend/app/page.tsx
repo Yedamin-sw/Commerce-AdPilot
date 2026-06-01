@@ -54,6 +54,7 @@ export default function Home() {
     setResponseText('');
 
     try {
+      console.log("API 호출 시작");
       const response = await fetch(`${backendUrl}/api/generate/multichannel-copy`, {
         method: 'POST',
         headers: {
@@ -61,6 +62,7 @@ export default function Home() {
         },
         body: JSON.stringify(samplePayload),
       });
+      console.log("상태 코드: ",response.status);
 
       const data = await response.json();
 
@@ -82,7 +84,7 @@ export default function Home() {
       {/* --- [1] 네비게이션 바 --- */}
       <nav className="flex justify-between items-center px-10 py-6 border-b border-slate-50 sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <div className="text-xl font-bold text-slate-900 tracking-tight">
-          Commerce <span className="text-blue-600">Bioverse</span>
+          <span className="text-blue-600">Bioverse</span>
         </div>
         <div className="flex gap-8 items-center text-sm font-semibold">
           <span className="text-slate-400">KR | EN</span>

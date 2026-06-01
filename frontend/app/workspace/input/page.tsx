@@ -63,16 +63,12 @@ export default function WorkspacePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-6 text-left">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 ml-1">
-                의약품명*
-              </label>
 
-              <input
-                type="text"
-                placeholder="예: 타이레놀"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">의약품명*</label>
+              <input type="text" placeholder="예: 타이레놀" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition"/>
             </div>
+            
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 ml-1">카테고리*</label>
               <input type="text" placeholder="예 : 해열·진통" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 outline-none transition" />

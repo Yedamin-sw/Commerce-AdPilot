@@ -8,7 +8,10 @@ import uuid
 import time
 
 from .schemas import MultichannelCopyRequest
-from backend.middlewares.openai import generate_multichannel_copy
+from backend.middlewares.openai import (
+    generate_multichannel_copy,
+    _create_client
+)
 
 router = APIRouter()
 
@@ -126,6 +129,7 @@ async def _call_openai(#프롬프트로 넣으면 될듯
     OpenAI 호출 1회 (재시도 포함).
     반환: (성공 여부, 본문 또는 에러메시지)
     """
+    client = _create_client()
     last_err = ""
     for attempt in range(retry + 1):
         async with semaphore:
@@ -153,7 +157,7 @@ async def _call_openai(#프롬프트로 넣으면 될듯
 @router.post("/normal")
 async def generate_normal(req: request, req1: request_file):
     print("[DEBUG] generate_normal")
-    user_content = _format_user_content(req.dict())
+    user_content = _format_user_content(req1.dict())
 
     semaphore = asyncio.Semaphore(1)
     prompt = build_prompt(
