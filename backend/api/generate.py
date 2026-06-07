@@ -415,6 +415,7 @@ async def generate_csv(
             detail="지원하지 않는 파일 형식입니다. CSV 또는 엑셀 파일을 업로드해주세요.",
         )
 
+    df, warnings = validate_and_clean_df(df)
     rows = df.to_dict(orient="records")
     if not rows:
         raise HTTPException(status_code=400, detail="비어있는 파일입니다.")
@@ -428,11 +429,12 @@ async def generate_csv(
             "status": "queued",
             "total": len(rows),
             "poll": f"/api/generate/csv/status/{job_id}",
+            "warnings": warnings,
         }
 
     # 작은 파일은 즉시 병렬 처리
     results = await _process_rows(rows, language, channel)
-    return {"results": results, "total": len(results)}
+    return {"results": results, "total": len(results), "warnings": warnings}
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -684,6 +686,87 @@ async def _retry_failed_items(job_id: str, retry: int):
 
     try:
         await asyncio.gather(*[_one(idx) for idx in failed_indices])
+        job["results"].sort(key=lambda x: x["index"])
+        job["status"] = "completed"
+    except Exception as e:
+        job["status"] = "failed"
+        job["error"] = str(e)
+    finally:
+        job["finished_at"] = time.time()
+
+
+
+# 마음에 안드는 결과물을 재생성(index사용)
+class RegenerateRequest(BaseModel):
+    indices: list[int]  # 재생성할 항목의 index 목록
+
+@router.post("/csv/regenerate/{job_id}")
+async def regenerate_selected(
+    job_id: str,
+    body: RegenerateRequest,
+    background_tasks: BackgroundTasks,
+    retry: int = DEFAULT_RETRY,
+):
+    job = Products.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job["status"] == "running":
+        raise HTTPException(status_code=409, detail="job is still running")
+
+    valid_indices = [i for i in body.indices if 0 <= i < len(job["_rows"])]
+    if not valid_indices:
+        return {"message": "재생성할 항목이 없습니다.", "count": 0}
+
+    background_tasks.add_task(_regenerate_selected_items, job_id, valid_indices, retry)
+    return {
+        "message": "재생성 시작",
+        "count": len(valid_indices),
+        "poll": f"/api/generate/csv/status/{job_id}",
+    }
+
+
+async def _regenerate_selected_items(job_id: str, indices: list[int], retry: int):
+    job = Products.get(job_id)
+    job["status"] = "running"
+    job["started_at"] = time.time()
+    job["finished_at"] = None
+    default_channel = job["_channel"]
+
+    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
+
+    async def _one(idx: int):
+        row = job["_rows"][idx]
+        row_channel = row.get("channel") or default_channel
+        ok, text = await _call_openai(
+            prompt=build_prompt(
+                tone=row.get("tone", ""),
+                core_message=row.get("core_message", ""),
+                forbidden_words=row.get("forbidden_words", ""),
+                channel=str(row_channel) if row_channel else None,
+                tnm=row.get("tnm", ""),
+                length=row.get("length", ""),
+                purpose=row.get("purpose", ""),
+            ),
+            user_content=_format_user_content(row),
+            semaphore=semaphore,
+            retry=retry,
+        )
+        for r in job["results"]:
+            if r["index"] == idx:
+                was_ok = r["ok"]
+                r["ok"] = ok
+                r["result"] = text
+                # 성공/실패 카운트 보정
+                if ok and not was_ok:
+                    job["success"] += 1
+                    job["failed"] -= 1
+                elif not ok and was_ok:
+                    job["success"] -= 1
+                    job["failed"] += 1
+                break
+
+    try:
+        await asyncio.gather(*[_one(idx) for idx in indices])
         job["results"].sort(key=lambda x: x["index"])
         job["status"] = "completed"
     except Exception as e:

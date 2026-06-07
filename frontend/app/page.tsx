@@ -9,6 +9,8 @@ export default function Home() {
   const [responseText, setResponseText] = useState('');
   const [errorText, setErrorText] = useState('');
 
+  const [lang, setLang] = useState<'KR' | 'EN'>('KR');//언어 변경 버튼
+
   const samplePayload = {
     brand_guide: {
       default_tone: '신뢰도 높고 과학적 근거 기반의 전문적 톤',
@@ -86,6 +88,15 @@ export default function Home() {
         </div>
         <div className="flex gap-8 items-center text-sm font-semibold">
           <span className="text-slate-400">KR | EN</span>
+          {/* 언어 변경 버튼
+            각 문장을 리스트에 담아 리스트를 통해 가져오게 해야됨
+          */}
+              <button onClick={() => setLang(lang === 'KR' ? 'EN' : 'KR')}
+              className="text-sm font-semibold text-slate-400 hover:text-slate-700 transition">
+              {lang === 'KR' ? 'KR | EN' : 'EN | KR'}
+              </button>
+              
+          {/*언어 변경 버튼 */}
           <Link 
             href="/workspace/input"
             className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-100"
