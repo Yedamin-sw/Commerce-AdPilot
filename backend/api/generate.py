@@ -100,6 +100,21 @@ class request_file(BaseModel):
     features: str
     target_audience: str
 
+class GenerateRequest(BaseModel):
+    tone: str
+    core_message: str
+    forbidden_words: str
+
+    channel: list[str]
+    tnm: str
+    length: str
+    purpose: str
+
+    name: str
+    category: str
+    features: str
+    target_audience: str
+
 
 # 각 컬럼 별로 , 로 된거 리스트로 바꾸기
 def _join(value) -> str:
@@ -155,9 +170,9 @@ async def _call_openai(#프롬프트로 넣으면 될듯
 # 1) 일반 텍스트 폼으로 광고 문구 생성(팀가이드, 옵션, 상품폼)
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/normal")
-async def generate_normal(req: request, req1: request_file):
+async def generate_normal(req: GenerateRequest):
     print("[DEBUG] generate_normal")
-    user_content = _format_user_content(req1.dict())
+    user_content = _format_user_content(req.dict())
 
     semaphore = asyncio.Semaphore(1)
     prompt = build_prompt(

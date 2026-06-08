@@ -66,8 +66,14 @@ export default function Home() {
 
       const data = await response.json();
 
+      console.log("응답 데이터:", data);
+
       if (!response.ok) {
-        throw new Error(data?.detail || '요청 실패');
+        console.error("에러 상세:", data);
+
+        throw new Error(
+          JSON.stringify(data, null, 2)
+        );
       }
 
       setResponseText(JSON.stringify(data, null, 2));
