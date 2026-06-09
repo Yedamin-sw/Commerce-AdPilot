@@ -16,84 +16,297 @@ from backend.middlewares.openai import (
 router = APIRouter()
 
 # 일괄 생성 작업 상태 보관소.
-# 운영에서는 Redis / Supabase 로 옮길 것 (서버 재시작 시 휘발됨).=>난 이게 뭔지 모르겠어. 저장 안하면 없어진다고?
+# 메모리에만 저장하므로 서버 재시작 시 사라짐. 나중에 DB로 옮길 것.
 Products: dict[str, dict] = {}
 
-# OpenAI 동시 호출 수 제한 (rate limit 보호)
 MAX_CONCURRENCY = 10
-
-# 실패 시 재시도 기본 횟수
 DEFAULT_RETRY = 2
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 플랫폼별 시스템 프롬프트
-# 채널이 정해지면 해당 채널의 톤/길이/포맷 규칙을 system prompt 에 주입.
-# (line 74 주석: "플랫폼 설정시 해당 플랫폼에 맞는 문구 생성하도록 하기")
+# 채널별 스타일 지침
 # ──────────────────────────────────────────────────────────────────────────────
-PLATFORM: dict[str, str] = {#이거 프롬프트 숨기기
-    "instagram": (
-        "Instagram 피드용. 짧고 감각적인 광고 문구 1~2문장 + 핵심 해시태그 3~5개. "
-        "이모지를 적극 활용하고 시각적 호기심을 자극할 것."
+PLATFORM: dict[str, str] = {
+    "blog": (
+        "【채널: 블로그 (네이버·티스토리)】\n"
+        "- 형식: 소제목(▶ 또는 []) 포함 3개 이상 문단, 정보 전달형 어조\n"
+        "- 독자가 검색으로 유입됨 → 제목과 첫 문단에 의약품명·효능 키워드 자연스럽게 배치\n"
+        "- 마지막 문단에 '이 포스팅은 참고용이며, 복용 전 전문의 또는 약사와 상담하세요.' 포함\n"
+        "- 이모지 사용 금지"
     ),
-    "youtube": (
-        "YouTube 영상 설명/인트로용. 첫 문장은 강한 후킹, 본문은 2~4문장. "
-        "마지막에 클릭/구독을 유도하는 CTA 한 줄 포함."
+    "instagram": (
+        "【채널: 인스타그램 피드·릴스】\n"
+        "- 형식: 첫 줄 후킹 1문장 → 본문 2~3문장 → 해시태그 4~6개\n"
+        "- 첫 줄은 스크롤을 멈추게 할 강렬한 한 줄로 시작 (질문형, 공감형 모두 가능)\n"
+        "- 이모지를 문단 사이사이에 자연스럽게 활용해 가독성 확보\n"
+        "- 의약품 과장 표현(완치, 100% 효과, 즉시 낫는) 절대 사용 금지\n"
+        "- 캡션 맨 끝에 '※ 전문의·약사 상담 후 복용하세요' 한 줄 추가"
     ),
     "facebook": (
-        "Facebook 광고 톤. 30~50대 타겟에 맞는 차분하고 신뢰감 있는 어조. "
-        "이모지는 절제, 길이는 3~5문장."
+        "【채널: 페이스북 피드 광고】\n"
+        "- 형식: 3~5문장, 이모지 1~2개로 절제\n"
+        "- 주 타겟 30~50대 → 차분하고 신뢰감 있는 어조, 유행어·과장 금지\n"
+        "- 제품 효능과 복용 대상을 명확하게 전달\n"
+        "- 글 하단에 '※ 이 게시물은 의약품 광고입니다. 용법·용량을 반드시 확인하세요.' 포함"
+    ),
+    "youtube": (
+        "【채널: 유튜브 영상 설명·인트로 자막】\n"
+        "- 형식: 후킹 1문장 → 본문 3~4문장 → CTA 1문장\n"
+        "- 첫 문장은 시청자가 즉시 공감할 질문이나 상황 묘사로 시작\n"
+        "- 영상 끝까지 시청을 유도하는 CTA 포함 (예: '아래 설명란에서 복용법 확인하세요')\n"
+        "- 이모지 사용 금지"
     ),
     "tiktok": (
-        "TikTok 영상 캡션. 매우 짧고 트렌디하게, Z세대 어휘와 트렌드 해시태그 사용. "
-        "한 문장 + 해시태그 형태."
+        "【채널: 틱톡 영상 캡션】\n"
+        "- 형식: 1~2문장 + 해시태그 3~5개, 전체 80자 이내\n"
+        "- MZ세대가 공감하는 일상 상황(시험 전날 두통, 환절기 감기 등) 짧게 언급\n"
+        "- 트렌디한 해시태그 포함, 마지막에 #약바로알기 추가"
     ),
     "naver": (
-        "네이버 블로그/쇼핑광고. 정보 전달형 어조, SEO 키워드를 자연스럽게 배치. "
-        "5~7문장의 본문 + 핵심 키워드 강조."
+        "【채널: 네이버 쇼핑·파워링크 광고】\n"
+        "- 형식: 2~3문장 + CTA 1문장\n"
+        "- 검색 사용자 대상 → 의약품명·효능 키워드를 문구 앞쪽에 배치\n"
+        "- 짧고 명확한 어조로 클릭을 유도하는 CTA 포함 (예: '지금 성분·복용법 확인하기')"
     ),
-    "default": "일반적인 광고 문구. 간결하고 매력적으로, 2~3문장.",
+    "default": (
+        "【채널: 일반】\n"
+        "- 형식: 2~3문장, 간결하고 신뢰감 있는 어조\n"
+        "- 의약품 주요 효능·복용 대상을 명확하게 전달\n"
+        "- '복용 전 전문의 또는 약사와 상담하세요' 문구 포함"
+    ),
 }
 
-# 선택된 항목들로 프롬프트 조합해서 반환하는 함수. generate 엔드포인트에서 사용.
-## 프롬프트를 채널 당 하나씩만 생성한다.
+# ──────────────────────────────────────────────────────────────────────────────
+# 길이 × 채널 조합 지침
+# ──────────────────────────────────────────────────────────────────────────────
+def _build_length_instruction(length: str, channel: str) -> str:
+    l = (length or "").lower()
+    is_long  = any(k in l for k in ["상세", "long", "장문"])
+    is_short = any(k in l for k in ["한 줄", "short", "단문"])
+
+    if is_long:
+        if channel in ("blog", "naver", "youtube"):
+            return (
+                "【분량: 장문 (상세 설명형)】\n"
+                "공백 제외 최소 900자 이상으로 작성하세요.\n"
+                "구조: ① 도입부 (타겟 독자가 겪는 상황 묘사, 100자 이상) "
+                "→ ② 본문 (효능·성분·복용법 상세, 소제목 포함 3개 이상 문단) "
+                "→ ③ 마무리 (복용 주의사항 + 전문의 상담 권장)\n"
+                "각 문단은 ▶ 또는 [] 소제목으로 구분하고, 단순 나열이 아닌 "
+                "실제 경험담처럼 살이 붙은 서술로 작성하세요."
+            )
+        elif channel == "instagram":
+            return (
+                "【분량: 장문 (인스타그램 허용 최대)】\n"
+                "캡션 최대치(약 2,000자) 내에서 풍성하게 작성하세요.\n"
+                "구조: 후킹 1줄 → 상황 공감 2~3문장 → 효능 상세 3~5문장 → 복용 팁 → 해시태그 5~7개\n"
+                "각 문단 사이 이모지로 시각적 구분을 해주세요."
+            )
+        else:
+            return (
+                "【분량: 장문】\n"
+                "해당 채널 허용 범위 내 최대한 풍성하게, 400자 이상으로 작성하세요.\n"
+                "효능 → 복용 대상 → 주의사항 순서로 문단을 나눠 상세히 서술하세요."
+            )
+
+    elif is_short:
+        return (
+            "【분량: 단문 (한 줄 카피)】\n"
+            "인사말·부연 설명·주의사항을 모두 생략하고 "
+            "15자~30자 이내의 슬로건 한 줄만 작성하세요.\n"
+            "평범하거나 밋밋한 표현은 절대 금지. "
+            "임팩트 있고 기억에 남는 카피여야 합니다.\n"
+            "예시 수준: '열이 나면, 타이레놀.' / '두통 잡는 단 하나의 선택.'"
+        )
+
+    else:  # medium (기본값)
+        channel_guide = {
+            "blog":      "소제목 포함 3~4문단, 공백 제외 250~400자",
+            "instagram": "후킹 1문장 + 설명 2~3문장 + 해시태그 4~6개, 총 150자 내외",
+            "facebook":  "3~5문장, 200~300자, 이모지 1~2개",
+            "youtube":   "후킹 1문장 + 본문 3문장 + CTA 1문장, 총 200자 내외",
+            "tiktok":    "1~2문장 + 해시태그 3~5개, 80자 이내",
+            "naver":     "키워드 포함 2~3문장 + CTA 1문장, 150자 내외",
+        }
+        guide = channel_guide.get(channel, "2~3문장, 150자 내외")
+        return (
+            f"【분량: 표준 (채널 기본값)】\n"
+            f"{guide}로 작성하세요.\n"
+            f"너무 길거나 짧지 않게, 해당 채널 사용자가 읽기 편한 적당한 분량을 유지하세요."
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 목적(purpose) 지침
+# ──────────────────────────────────────────────────────────────────────────────
+def _build_purpose_instruction(purpose: str) -> str:
+    p = (purpose or "").lower()
+
+    if any(k in p for k in ["conversion", "전환", "구매"]):
+        return (
+            "【목적: 전환 (구매·행동 유도)】\n"
+            "독자가 지금 바로 약국을 방문하거나 구매하도록 유도하세요.\n"
+            "혜택(빠른 효과, 편의성)을 전면에 내세우고, "
+            "글 마지막에 직접적인 CTA를 자연스럽게 배치하세요.\n"
+            "예시 CTA: '가까운 약국에서 확인해보세요', '지금 성분과 복용법을 확인하세요'"
+        )
+    elif any(k in p for k in ["awareness", "인지", "브랜드"]):
+        return (
+            "【목적: 인지도 제고 (브랜드 각인)】\n"
+            "직접 구매 유도보다는 브랜드명과 핵심 가치를 기억에 남기는 데 집중하세요.\n"
+            "'이런 약이 있다'는 인상을 자연스럽게 심어주는 스토리텔링 방식으로 작성하세요."
+        )
+    elif any(k in p for k in ["engagement", "참여", "공유"]):
+        return (
+            "【목적: 참여·공유 유도】\n"
+            "타겟 독자가 '이거 나 얘기다'라고 느낄 수 있는 공감형 상황 묘사로 시작하세요.\n"
+            "댓글·공유를 자연스럽게 유도하는 질문형 마무리 문장을 사용하세요.\n"
+            "예시: '혹시 여러분도 이런 경험 있으신가요?'"
+        )
+    elif any(k in p for k in ["정보", "informational"]):
+        return (
+            "【목적: 정보 전달】\n"
+            "의약품의 효능·성분·복용법을 정확하고 이해하기 쉽게 전달하는 데 집중하세요.\n"
+            "과장 없이 사실 기반으로 서술하되, 독자가 끝까지 읽고 싶게 흥미롭게 구성하세요."
+        )
+    else:
+        return (
+            f"【목적: {purpose or '일반'}】\n"
+            f"위 목적이 달성되도록 카피의 흐름을 설계하세요."
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 프롬프트 빌더 (채널 × 길이 × 목적 통합)
+# ──────────────────────────────────────────────────────────────────────────────
 def build_prompt(
     tone: str, core_message: str,
     forbidden_words: str, channel,
-    tnm: str, length: str, purpose: str):
+    tnm: str, length: str, purpose: str,
+    name: str = "", features: str = ""
+) -> str:
 
     print("[DEBUG] build_prompt")
 
-    base = "you are marketing expert having high understaing about marketing trend for variant customer segments make ad copy having following this information and treat language the same as a document"
-    # channel이 리스트로 넘어오는 경우 첫 번째 값 사용
+    # channel 정규화
     if isinstance(channel, list):
         channel = channel[0] if channel else "default"
-    if not channel or channel.strip().lower() not in PLATFORM:
+    channel = (channel or "default").strip().lower()
+    if channel not in PLATFORM:
         channel = "default"
-    channel = channel.strip().lower()
-    
-    team_guide = f"tone: {tone}, core message: {core_message}, forbidden words: {forbidden_words}"
-    option = f"channel: {channel}, tone and manner: {tnm}, length:{length}, purpose: {purpose}"#채널에 따라 적용가능?
-    style = PLATFORM.get(channel, PLATFORM["default"])#추가 조건 딕셔너리
-    
-    return f"{base}\nteam guide: {team_guide}\n option: {option}\n condition: {style}"
-    # 만든 프롬프트를 OpenAI에 넘기기
-    
+
+    forbidden_clause = (
+        f"\n금지 표현 (절대 사용 불가): {forbidden_words}"
+        if forbidden_words and forbidden_words.strip() else ""
+    )
+    tnm_clause = (
+        f"\n추가 톤앤매너 요청: {tnm}"
+        if tnm and tnm.strip() else ""
+    )
+
+    prompt = f"""당신은 국내 의약품 광고 전문 카피라이터입니다.
+아래 지침을 모두 반영하여 완성도 높은 광고 문구를 작성하세요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌ 브랜드 가이드
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+기본 톤: {tone}
+핵심 전달 메시지: {core_message}{forbidden_clause}{tnm_clause}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌ {PLATFORM[channel]}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌ {_build_length_instruction(length, channel)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌ {_build_purpose_instruction(purpose)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌ 의약품 광고 필수 준수사항
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. '완치 보장', '부작용 없음', '100% 효과', '즉시 낫는다' 등 과장·단정 표현 사용 금지
+2. 모든 광고에 전문의·약사 상담 권장 또는 용법·용량 확인 안내 문구 포함
+3. 효능·효과는 식약처 허가 범위 내 표현만 사용
+4. 오직 아래 입력된 제품명({name})만 사용할 것 — 다른 임의의 제품명 절대 사용 금지
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌ 작성 방식
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 제품 정보를 단순 나열하지 말고, 타겟 고객의 실제 일상 상황 속에 자연스럽게 녹여 쓰세요.
+- 기계적인 말투(~하십시오, ~에 도움을 줍니다)는 피하고, 실제 마케터가 쓰는 구어체로 작성하세요.
+- 응답은 완성된 광고 문구만 출력하세요. 설명·해설·번호 매기기 없이.
+"""
+    return prompt
 
 
-# 요청 모델(파일을 읽을때로 하면 되나??)
+# ──────────────────────────────────────────────────────────────────────────────
+# user content 포맷터 — 제품 정보만 간결하게 전달
+# (스토리텔링 지침은 system prompt에서 처리하므로 여기선 사실 정보만)
+# ──────────────────────────────────────────────────────────────────────────────
+def _join(value) -> str:
+    if value is None:
+        return ""
+    parts = [x.strip() for x in str(value).split(",")]
+    return ", ".join(parts) if parts else ""
+
+
+def _format_user_content(row: dict) -> str:
+    return (
+        f"[제품명] {_join(row.get('name'))}\n"
+        f"[카테고리] {_join(row.get('category'))}\n"
+        f"[주요 효능·특징] {_join(row.get('features'))}\n"
+        f"[타겟 고객] {_join(row.get('target_audience'))}\n"
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# OpenAI 호출 (재시도 포함)
+# ──────────────────────────────────────────────────────────────────────────────
+async def _call_openai(
+    prompt: str,
+    user_content: str,
+    semaphore: asyncio.Semaphore,
+    retry: int = DEFAULT_RETRY,
+) -> tuple[bool, str]:
+    client = _create_client()
+    last_err = ""
+    for attempt in range(retry + 1):
+        async with semaphore:
+            try:
+                response = await client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user",   "content": user_content},
+                    ],
+                    temperature=0.75,   # 창의성 ↑ (0.7보다 약간 높게)
+                    max_tokens=2000,    # 장문 생성 시 잘리지 않도록
+                )
+                return True, response.choices[0].message.content
+            except Exception as e:
+                last_err = str(e)
+        if attempt < retry:
+            await asyncio.sleep(2 ** attempt)
+    return False, f"[ERROR] {last_err}"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Pydantic 모델
+# ──────────────────────────────────────────────────────────────────────────────
 class request(BaseModel):
-    # 팀 가이드 부문
     tone: str
     core_message: str
     forbidden_words: str
-    # 옵션 부문
     channel: list[str]
     tnm: str
     length: str
-    purpose: str 
+    purpose: str
+    name: str = ""
+    category: str = ""
+    features: str = ""
+    target_audience: str = ""
 
-#각 상품별 요청(컬럼에서 읽어야함 ','을 기준으로 열거돼있다고 가정 파일을 읽어서 이대로 넣기 수작성 폼일 경우 그대로 사용)    
 class request_file(BaseModel):
     name: str
     category: str
@@ -104,76 +317,23 @@ class GenerateRequest(BaseModel):
     tone: str
     core_message: str
     forbidden_words: str
-
     channel: list[str]
     tnm: str
     length: str
     purpose: str
-
     name: str
     category: str
     features: str
     target_audience: str
 
 
-# 각 컬럼 별로 , 로 된거 리스트로 바꾸기
-def _join(value) -> str:
-    if value is None:
-        return ""
-    parts = [x.strip() for x in str(value).split(",")]
-    return ", ".join(parts) if parts else ""
-    
-
-# 받은 파일을 문자열로 변환
-def _format_user_content(row: dict) -> str:
-    return (
-        f"name: {_join(row.get('name'))}\n"
-        f"category: {_join(row.get('category'))}\n"
-        f"features: {_join(row.get('features'))}\n"
-        f"target_audience: {_join(row.get('target_audience'))}\n"
-    )
-
-
-async def _call_openai(#프롬프트로 넣으면 될듯
-    prompt: str,
-    user_content: str,
-    semaphore: asyncio.Semaphore,# 개수 제한
-    retry: int = DEFAULT_RETRY,
-) -> tuple[bool, str]:
-    """
-    OpenAI 호출 1회 (재시도 포함).
-    반환: (성공 여부, 본문 또는 에러메시지)
-    """
-    client = _create_client()
-    last_err = ""
-    for attempt in range(retry + 1):
-        async with semaphore:
-            try:
-                response = await client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": prompt},
-                        {"role": "user", "content": user_content},
-                    ],
-                )
-                return True, response.choices[0].message.content
-            except Exception as e:
-                last_err = str(e)
-        # 지수 백오프 (rate limit / 일시적 오류 대응)
-        if attempt < retry:
-            await asyncio.sleep(2 ** attempt)
-    return False, f"[ERROR] {last_err}"
-
-####2026-05-02 에 여기까지 함 
-
 # ──────────────────────────────────────────────────────────────────────────────
-# 1) 일반 텍스트 폼으로 광고 문구 생성(팀가이드, 옵션, 상품폼)
+# 1) 단건 생성 (수기 입력 폼)
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/normal")
 async def generate_normal(req: GenerateRequest):
     print("[DEBUG] generate_normal")
     user_content = _format_user_content(req.dict())
-
     semaphore = asyncio.Semaphore(1)
     prompt = build_prompt(
         tone=req.tone,
@@ -182,44 +342,40 @@ async def generate_normal(req: GenerateRequest):
         channel=req.channel,
         tnm=req.tnm,
         length=req.length,
-        purpose=req.purpose
+        purpose=req.purpose,
+        name=req.name,
+        features=req.features,
     )
-    ok, text = await _call_openai(
-        prompt = prompt,
-        user_content=user_content,
-        semaphore=semaphore
-    )
+    ok, text = await _call_openai(prompt=prompt, user_content=user_content, semaphore=semaphore)
     return {"ok": ok, "result": text}
 
 
-
 # ──────────────────────────────────────────────────────────────────────────────
-# 2) 플랫폼별 광고 문구 생성
-#    - channel 리스트의 모든 플랫폼에 대해 병렬로 한 번에 생성.
-#    - 각 플랫폼의 스타일이 system prompt 에 자동 주입된다.
+# 2) 멀티 채널 병렬 생성
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/platform")
 async def generate_platform(req: request):
     print("[DEBUG] generate_platform")
     channels = req.channel or ["default"]
     user_content = _format_user_content(req.dict())
-    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)   # 밖에서 1번
-    tasks = []                                       # 밖에서 1번
+    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
+    tasks = []
 
     for ch in channels:
         prompt = build_prompt(
             tone=req.tone,
             core_message=req.core_message,
             forbidden_words=req.forbidden_words,
-            channel=[ch.strip().lower()],            # 리스트로 감싸서
+            channel=[ch.strip().lower()],
             tnm=req.tnm,
             length=req.length,
             purpose=req.purpose,
+            name=req.name,
+            features=req.features,
         )
-        tasks.append(_call_openai(prompt, user_content, semaphore))   # = 가 아니라 append
+        tasks.append(_call_openai(prompt, user_content, semaphore))
 
-    pairs = await asyncio.gather(*tasks) #병렬 실행
-
+    pairs = await asyncio.gather(*tasks)
     return {
         "results": [
             {"channel": ch, "ok": ok, "text": txt}
@@ -236,21 +392,17 @@ async def generate_multichannel_copy_route(req: MultichannelCopyRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-#2026-05-03에 여기까지
+
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 3) CSV/엑셀 일괄 생성(입력 파일 읽기)
-#    - 각 행을 asyncio.gather + Semaphore 로 병렬 처리.
-#    - 행 수가 많거나 async_mode=True 면 BackgroundTasks 로 비동기 처리하고
-#      job_id 를 즉시 반환 → 상태/미리보기/재시도 엔드포인트로 후속 조회.=>엔드포인트라는 고급단어 쓰지마라 나 존나 멍청하다
-#   job_id 가 아니라 product_id로
+# 3) CSV/엑셀 일괄 생성
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/csv")
 async def generate_csv(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     language: str = Form("ko"),
-    channel: str | None = Form(None),  # CSV 행에 channel 컬럼이 없을 때 쓸 기본 채널
+    channel: str | None = Form(None),
     async_mode: bool = Form(False),
     async_threshold: int = Form(50),
 ):
@@ -262,126 +414,79 @@ async def generate_csv(
     elif fname.endswith((".xlsx", ".xls")):
         df = pd.read_excel(io.BytesIO(content))
     else:
-        raise HTTPException(
-            status_code=400,
-            detail="지원하지 않는 파일 형식입니다. CSV 또는 엑셀 파일을 업로드해주세요.",
-        )
+        raise HTTPException(status_code=400, detail="CSV 또는 엑셀 파일만 업로드 가능합니다.")
 
     rows = df.to_dict(orient="records")
     if not rows:
         raise HTTPException(status_code=400, detail="비어있는 파일입니다.")
 
-    # 큰 파일은 비동기 처리, job_id 즉시 반환
     if async_mode or len(rows) > async_threshold:
         job_id = _create_job(rows, language, channel)
         background_tasks.add_task(_run_bulk_job, job_id)
-        return {
-            "job_id": job_id,
-            "status": "queued",
-            "total": len(rows),
-            "poll": f"/api/generate/csv/status/{job_id}",
-        }
+        return {"job_id": job_id, "status": "queued", "total": len(rows), "poll": f"/api/generate/csv/status/{job_id}"}
 
-    # 작은 파일은 즉시 병렬 처리
     results = await _process_rows(rows, language, channel)
     return {"results": results, "total": len(results)}
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 일괄 작업 관리용 내부 함수 (생성된 결과물의 성공/실패를 기록하고 실패한 것이 있다면 여기서 특정해서 재시도 할 수 있도록 한다.)
+# 일괄 처리 내부 함수들
 # ──────────────────────────────────────────────────────────────────────────────
 def _create_job(rows: list[dict], language: str, channel: str | None) -> str:
     product_id = str(uuid.uuid4())
     Products[product_id] = {
-        "status": "queued",            # queued | running | completed | failed
-        "total": len(rows),
-        "done": 0,
-        "success": 0,
-        "failed": 0,
-        "results": [],                 # [{index, input, ok, result}]
-        "started_at": None,
-        "finished_at": None,
-        # 재시도용으로 원본 입력 보관
-        "_rows": rows,
-        "_language": language,
-        "_channel": channel,
+        "status": "queued",
+        "total": len(rows), "done": 0, "success": 0, "failed": 0,
+        "results": [], "started_at": None, "finished_at": None,
+        "_rows": rows, "_language": language, "_channel": channel,
     }
     return product_id
 
-####################################################################
-async def _process_rows(
-    rows: list[dict],
-    language: str,
-    default_channel: str | None,
-) -> list[dict]:
-    """동기 응답용: CSV 행들을 병렬 처리해서 결과 리스트 반환."""
+
+async def _process_rows(rows: list[dict], language: str, default_channel: str | None) -> list[dict]:
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
     async def _one(i: int, row: dict) -> dict:
-        row_channel = (row.get("channel") or default_channel or "default").strip().lower()
+        ch = (row.get("channel") or default_channel or "default").strip().lower()
         prompt = build_prompt(
-            tone=row.get("tone", ""),
-            core_message=row.get("core_message", ""),
-            forbidden_words=row.get("forbidden_words", ""),
-            channel=row_channel,
-            tnm=row.get("tnm", ""),
-            length=row.get("length", ""),
+            tone=row.get("tone", ""), core_message=row.get("core_message", ""),
+            forbidden_words=row.get("forbidden_words", ""), channel=ch,
+            tnm=row.get("tnm", ""), length=row.get("length", ""),
             purpose=row.get("purpose", ""),
+            name=row.get("name", ""), features=row.get("features", ""),
         )
-        ok, text = await _call_openai(
-            prompt=prompt,
-            user_content=_format_user_content(row),
-            semaphore=semaphore,
-        )
+        ok, text = await _call_openai(prompt=prompt, user_content=_format_user_content(row), semaphore=semaphore)
         return {"index": i, "input": row, "ok": ok, "result": text}
 
     return await asyncio.gather(*[_one(i, r) for i, r in enumerate(rows)])
-####################################################################
 
 
 async def _run_bulk_job(product_id: str):
     job = Products[product_id]
     job["status"] = "running"
     job["started_at"] = time.time()
-    rows = job["_rows"]
-    language = job["_language"]
-    default_channel = job["_channel"]
-    
-
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
-
     async def _one(i: int, row: dict):
-        row_channel = (row.get("channel") or default_channel or "default").strip().lower()
-
-        prompt = build_prompt(                     # ← 행마다 프롬프트 새로 만듦
-            tone=row.get("tone", ""),
-            core_message=row.get("core_message", ""),
-            forbidden_words=row.get("forbidden_words", ""),
-            channel=row_channel,                   # ← 단일 채널 (build_prompt 시그니처 정리한 후 기준)
-            tnm=row.get("tnm", ""),
-            length=row.get("length", ""),
+        ch = (row.get("channel") or job["_channel"] or "default").strip().lower()
+        prompt = build_prompt(
+            tone=row.get("tone", ""), core_message=row.get("core_message", ""),
+            forbidden_words=row.get("forbidden_words", ""), channel=ch,
+            tnm=row.get("tnm", ""), length=row.get("length", ""),
             purpose=row.get("purpose", ""),
+            name=row.get("name", ""), features=row.get("features", ""),
         )
-        user_content = _format_user_content(row)
-
         ok, text = await _call_openai(
-            prompt=prompt,
-            user_content=user_content,
-            semaphore=semaphore,
-            retry=DEFAULT_RETRY,
+            prompt=prompt, user_content=_format_user_content(row),
+            semaphore=semaphore, retry=DEFAULT_RETRY,
         )
-
         job["results"].append({"index": i, "input": row, "ok": ok, "result": text})
         job["done"] = len(job["results"])
-        if ok:
-            job["success"] += 1
-        else:
-            job["failed"] += 1
-            
+        if ok: job["success"] += 1
+        else:  job["failed"] += 1
+
     try:
-        await asyncio.gather(*[_one(i, r) for i, r in enumerate(rows)])
-        # 결과를 원래 순서대로 정렬
+        await asyncio.gather(*[_one(i, r) for i, r in enumerate(job["_rows"])])
         job["results"].sort(key=lambda x: x["index"])
         job["status"] = "completed"
     except Exception as e:
@@ -389,34 +494,22 @@ async def _run_bulk_job(product_id: str):
         job["error"] = str(e)
     finally:
         job["finished_at"] = time.time()
-        
-def _eta_seconds(job: dict) -> float | None:
-    """남은 시간(초) 추정. 진행률이 0 이거나 끝났으면 None."""
-    if job["status"] in ("completed", "failed"):
-        return 0
-    if not job["started_at"] or job["done"] == 0:
-        return None
-    elapsed = time.time() - job["started_at"]
-    rate = job["done"] / elapsed  # rows/sec
-    if rate <= 0:
-        return None
-    remaining = job["total"] - job["done"]
-    return remaining / rate
 
-# 현재 처리 개수를 세기 위해
+
+def _eta_seconds(job: dict) -> float | None:
+    if job["status"] in ("completed", "failed"): return 0
+    if not job["started_at"] or job["done"] == 0: return None
+    elapsed = time.time() - job["started_at"]
+    rate = job["done"] / elapsed
+    return (job["total"] - job["done"]) / rate if rate > 0 else None
+
+
 def _public_view(job: dict, include_results: bool = True) -> dict:
-    """JOBS dict 에서 내부 필드(_rows 등) 빼고 외부에 보낼 형태로 가공."""
     eta = _eta_seconds(job)
-    elapsed = (
-        (job["finished_at"] or time.time()) - job["started_at"]
-        if job["started_at"] else None
-    )
+    elapsed = ((job["finished_at"] or time.time()) - job["started_at"]) if job["started_at"] else None
     view = {
-        "status": job["status"],
-        "total": job["total"],
-        "done": job["done"],
-        "success": job["success"],
-        "failed": job["failed"],
+        "status": job["status"], "total": job["total"], "done": job["done"],
+        "success": job["success"], "failed": job["failed"],
         "progress": (job["done"] / job["total"]) if job["total"] else 0,
         "elapsed_sec": round(elapsed, 1) if elapsed is not None else None,
         "eta_sec": round(eta, 1) if eta is not None else None,
@@ -428,76 +521,43 @@ def _public_view(job: dict, include_results: bool = True) -> dict:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 4) 일괄 작업 상태 조회 (현재 완료된 항목 수 + 남은 시간)
-#    (하단 주석: "현재 완료된 항목들", "남은 시간")
+# 4) 작업 상태 조회
 # ──────────────────────────────────────────────────────────────────────────────
-## 여기서 완료된 작업개수를 세서 
 @router.get("/csv/status/{job_id}")
 async def get_csv_status(job_id: str):
     job = Products.get(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
+    if not job: raise HTTPException(status_code=404, detail="job not found")
     return _public_view(job, include_results=False)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 5) 완료된 항목 미리보기
-#    - 아직 진행 중이라도 지금까지 완료된 결과만 잘라서 반환.
-#    - limit, offset 으로 페이지네이션 가능 (history 화면에서 무한스크롤용).
-#    (하단 주석: "완료된 항목 미리 보기")
+# 5) 완료 항목 미리보기
 # ──────────────────────────────────────────────────────────────────────────────
 @router.get("/csv/preview/{job_id}")
-async def preview_completed(
-    job_id: str,
-    limit: int = 20,
-    offset: int = 0,
-    only_success: bool = False,
-):
+async def preview_completed(job_id: str, limit: int = 20, offset: int = 0, only_success: bool = False):
     job = Products.get(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
-
+    if not job: raise HTTPException(status_code=404, detail="job not found")
     items = sorted(job["results"], key=lambda x: x["index"])
-    if only_success:
-        items = [r for r in items if r["ok"]]
-
+    if only_success: items = [r for r in items if r["ok"]]
     return {
-        "status": job["status"],
-        "done": job["done"],
-        "total": job["total"],
+        "status": job["status"], "done": job["done"], "total": job["total"],
         "showing": {"offset": offset, "limit": limit, "count": len(items[offset:offset + limit])},
         "items": items[offset: offset + limit],
     }
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 6) 실패시 재시도
-#    - 해당 job 의 ok=False 결과만 다시 OpenAI 에 보낸다.
-#    - 성공한 것은 그대로 두고 실패한 것만 result 가 갱신된다.
-#    (하단 주석: "실패시 재시도")
+# 6) 실패 항목 재시도
 # ──────────────────────────────────────────────────────────────────────────────
 @router.post("/csv/retry/{job_id}")
-async def retry_failed(
-    job_id: str,
-    background_tasks: BackgroundTasks,
-    retry: int = DEFAULT_RETRY,
-):
+async def retry_failed(job_id: str, background_tasks: BackgroundTasks, retry: int = DEFAULT_RETRY):
     job = Products.get(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
-    if job["status"] == "running":
-        raise HTTPException(status_code=409, detail="job is still running")
-
+    if not job: raise HTTPException(status_code=404, detail="job not found")
+    if job["status"] == "running": raise HTTPException(status_code=409, detail="job is still running")
     failed_items = [r for r in job["results"] if not r["ok"]]
-    if not failed_items:
-        return {"message": "재시도할 실패 항목이 없습니다.", "failed": 0}
-
+    if not failed_items: return {"message": "재시도할 실패 항목이 없습니다.", "failed": 0}
     background_tasks.add_task(_retry_failed_items, job_id, retry)
-    return {
-        "message": "재시도 시작",
-        "failed": len(failed_items),
-        "poll": f"/api/generate/csv/status/{job_id}",
-    }
+    return {"message": "재시도 시작", "failed": len(failed_items), "poll": f"/api/generate/csv/status/{job_id}"}
 
 
 async def _retry_failed_items(job_id: str, retry: int):
@@ -505,38 +565,29 @@ async def _retry_failed_items(job_id: str, retry: int):
     job["status"] = "running"
     job["started_at"] = time.time()
     job["finished_at"] = None
-    language = job["_language"]
-    default_channel = job["_channel"]
-
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
     failed_indices = [r["index"] for r in job["results"] if not r["ok"]]
 
     async def _one(idx: int):
         row = job["_rows"][idx]
-        row_channel = row.get("channel") or default_channel
-        ok, text = await _call_openai(##############여기
+        ch = (row.get("channel") or job["_channel"] or "default").strip().lower()
+        ok, text = await _call_openai(
             prompt=build_prompt(
-                tone=row.get("tone", ""),
-                core_message=row.get("core_message", ""),
-                forbidden_words=row.get("forbidden_words", ""),
-                channel=str(row_channel) if row_channel else None,
-                tnm=row.get("tnm", ""),
-                length=row.get("length", ""),
+                tone=row.get("tone", ""), core_message=row.get("core_message", ""),
+                forbidden_words=row.get("forbidden_words", ""), channel=ch,
+                tnm=row.get("tnm", ""), length=row.get("length", ""),
                 purpose=row.get("purpose", ""),
+                name=row.get("name", ""), features=row.get("features", ""),
             ),
             user_content=_format_user_content(row),
-            semaphore=semaphore,
-            retry=retry,
+            semaphore=semaphore, retry=retry,
         )
-        # 기존 결과를 in-place 갱신
         for r in job["results"]:
             if r["index"] == idx:
                 was_failed = not r["ok"]
-                r["ok"] = ok
-                r["result"] = text
+                r["ok"] = ok; r["result"] = text
                 if ok and was_failed:
-                    job["success"] += 1
-                    job["failed"] -= 1
+                    job["success"] += 1; job["failed"] -= 1
                 break
 
     try:
@@ -544,7 +595,6 @@ async def _retry_failed_items(job_id: str, retry: int):
         job["results"].sort(key=lambda x: x["index"])
         job["status"] = "completed"
     except Exception as e:
-        job["status"] = "failed"
-        job["error"] = str(e)
+        job["status"] = "failed"; job["error"] = str(e)
     finally:
         job["finished_at"] = time.time()
