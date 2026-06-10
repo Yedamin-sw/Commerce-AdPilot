@@ -127,72 +127,7 @@ export default function Home() {
         >
           지금 생성 시작하기
         </Link>
-
-        <div className="mt-8 w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-lg p-6 text-left">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-600">API Test</p>
-              <h2 className="mt-2 text-xl font-extrabold text-slate-900">의약품 광고 생성 테스트</h2>
-              <p className="mt-2 text-sm text-slate-500">
-                아래 버튼을 누르면 Next.js에서 FastAPI의 <span className="font-semibold text-slate-700">/api/generate/multichannel-copy</span>를 호출합니다.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleRunPrompt}
-              disabled={isLoading}
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoading ? '생성 중...' : '프롬프트 테스트 실행'}
-            </button>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">요청 샘플</p>
-              <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs leading-6 text-slate-700">
-                {JSON.stringify(samplePayload, null, 2)}
-              </pre>
-            </div>
-            <div className="rounded-2xl bg-slate-950 p-4 text-white">
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">응답</p>
-              {errorText ? (
-                <p className="text-sm leading-6 text-rose-300">{errorText}</p>
-              ) : responseText ? (
-                <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs leading-6 text-emerald-200">
-                  {responseText}
-                </pre>
-              ) : (
-                <p className="text-sm leading-6 text-slate-400">버튼을 눌러 응답을 확인하세요.</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 서비스 미리보기 이미지 영역 (피그마의 어두운 대시보드 부분) */}
-        <div className="mt-20 w-full max-w-5xl px-4">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-8 border-slate-50 aspect-[16/10] bg-[#1E293B] flex flex-col p-8 text-left transition hover:scale-[1.01] duration-500">
-             <div className="flex gap-2 mb-10">
-               <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-               <div className="w-3 h-3 bg-amber-400 rounded-full"></div>
-               <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-             </div>
-             <div className="space-y-6">
-                <div className="h-12 w-1/3 bg-slate-700/50 rounded-lg animate-pulse"></div>
-                <div className="h-4 w-1/2 bg-slate-700/30 rounded-lg"></div>
-                <div className="grid grid-cols-3 gap-6 mt-10">
-                   <div className="h-40 bg-slate-800/50 rounded-2xl border border-slate-700/50"></div>
-                   <div className="h-40 bg-slate-800/50 rounded-2xl border border-slate-700/50"></div>
-                   <div className="h-40 bg-slate-800/50 rounded-2xl border border-slate-700/50"></div>
-                </div>
-                <div className="h-16 w-full bg-emerald-500/20 rounded-xl border border-emerald-500/30"></div>
-             </div>
-             {/* 이미지 중앙에 'Bioverse' 텍스트 등을 배치하면 더 비슷해집니다. */}
-             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-                <span className="text-[120px] font-black text-white italic">Bioverse</span>
-             </div>
-          </div>
-        </div>
+        
       </section>
 
       {/* --- [3] 왜 Bioverse인가요? (Feature Section) --- */}
