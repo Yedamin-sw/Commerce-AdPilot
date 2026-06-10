@@ -356,7 +356,7 @@ export default function WorkspacePage() {
             </button>
             <button
               type="button"
-              onClick={() => alert('History 기능은 현재 개발 중입니다.')}
+              onClick={() => router.push('/workspace/history')}
               className="flex items-center justify-center gap-2 w-full py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-medium transition"
             >
               <History size={18} /> History

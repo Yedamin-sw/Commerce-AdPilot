@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   FileText, CheckCircle2, Upload, History, Zap,
   RefreshCw, Download, Copy, ChevronRight, X,
@@ -105,6 +106,7 @@ function buildFallback(channels: string[], name: string, features: string, audie
 // ── 결과 페이지 내부 컴포넌트 ────────────────────────────────────
 function ResultContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // URL 파라미터 파싱
   const pName           = searchParams.get('product_name')   || '타이레놀정 500mg';
@@ -296,7 +298,7 @@ function ResultContent() {
             <Upload size={18} /> CSV Export
           </button>
           <button
-            onClick={() => alert('History 기능은 개발 중입니다.')}
+            onClick={() => router.push('/workspace/history')}
             className="flex items-center justify-center gap-2 w-full py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-medium transition"
           >
             <History size={18} /> History
