@@ -1,9 +1,16 @@
+import os
+import sys
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import generate
 from dotenv import load_dotenv
-import os
-from pathlib import Path
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from backend.api import generate
 
 # 프로젝트 루트의 .env 로드
 env_path = Path(__file__).resolve().parents[1] / '.env'
@@ -17,6 +24,9 @@ except Exception:
     product = None
 
 app = FastAPI()
+
+# Load local .env (no-op if file missing)
+load_dotenv()
 
 # CORS 설정 (Next.js 프론트엔드 허용)
 # backend(uvicorn) = "http://localhost:8000"
@@ -35,7 +45,7 @@ app.include_router(generate.router,    prefix="/api/generate")
 if history is not None:
     app.include_router(history.router, prefix="/api/history")
 if product is not None:
-    app.include_router(product.router, prefix="/api/product")
+    app.include_router(product.router,  prefix="/api/product")
 
 
 @app.get("/")

@@ -11,4 +11,3 @@ python-multipart
 sqlalchemy
 alembic
 python-dotenv
-python-dotenv
