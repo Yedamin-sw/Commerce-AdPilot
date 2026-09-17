@@ -1,20 +1,14 @@
 # 상품 관리 API
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
 from backend.database import supabase_admin as supabase
 
 router = APIRouter()
 
 
-# 상품 등록 요청 모델 (products 테이블 스키마와 동일)
+# 상품 등록 요청 모델 (실제 products 테이블 컬럼: id, name, created_at 뿐)
 class Product(BaseModel):
-    user_id: str                          # 소유자 uuid (NN, users.id FK)
-    name: str                             # 상품명 (NN)
-    category: Optional[str] = None        # 카테고리
-    features: str                         # 주요 특징 (NN)
-    target_audience: Optional[str] = None # 타겟 고객
-    price: Optional[str] = None           # 가격대 (선택)
+    name: str                             # 상품명
 
 
 # 상품 등록

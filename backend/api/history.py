@@ -1,6 +1,7 @@
-# 콘텐츠 저장 
+# 콘텐츠 저장
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from typing import Optional
 from backend.database import supabase_admin as supabase
 import json
 import csv
@@ -9,13 +10,13 @@ from datetime import datetime
 
 router = APIRouter()
 
+# id / created_at 은 DB가 자동 생성 (gen_random_uuid(), now()) 이므로 클라이언트가 보낼 필요 없음.
+# product_id 도 nullable — 아직 저장된 상품이 없으면 없이도 저장 가능.
 class ad_Content(BaseModel):#저장 양식
-    id: str
-    product_id: int
+    product_id: Optional[int] = None
     platform_type: str
     generated_text: str
-    is_saved: bool
-    created_at: str
+    is_saved: bool = True
 
 class ContentUpdate(BaseModel):#편집 양식
     generated_text: str
@@ -25,7 +26,7 @@ class ContentUpdate(BaseModel):#편집 양식
 async def save_content(content: ad_Content):
     try:
         response = supabase.table("ad_contents").insert(content.dict()).execute()
-        return {"message": "Content saved successfully"}
+        return {"message": "Content saved successfully", "content": response.data[0] if response.data else {}}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -1,0 +1,53 @@
+# European Union — advertising rule set (draft / heuristic)
+# ─────────────────────────────────────────────────────────────────────────────
+# ⚠️ Starter rules written by hand. Requires legal / regulatory review before
+#    production use.
+# References:
+#   - Directive 2001/83/EC — medicinal products for human use
+#   - Regulation (EC) No 1924/2006 — nutrition and health claims made on foods
+#     (Art. 3: not false/ambiguous/misleading; Art. 7: no disease prevention/treatment
+#      claims for foods; Art. 13/14: only authorised health claims)
+# ─────────────────────────────────────────────────────────────────────────────
+country: EU
+version: "2025-01"
+source: "Directive 2001/83/EC / Regulation (EC) No 1924/2006"
+
+rules:
+  - id: EU-DISEASE-CLAIM
+    category: prohibited_claim
+    severity: critical
+    description: "Claims referring to the prevention, treatment or cure of a human disease are prohibited for foods"
+    detect:
+      keywords: ["cure", "cures", "treat", "treats", "prevent", "prevents", "heal", "therapy", "remedy for"]
+      llm_check: "Does this claim reference the prevention, treatment or cure of a human disease?"
+    fix_hint: "Use only authorised health claims from the EU Register of nutrition and health claims"
+    source: "Regulation (EC) No 1924/2006, Art. 2(2)(6) & recital"
+
+  - id: EU-UNAUTHORISED-HEALTH-CLAIM
+    category: prohibited_claim
+    severity: major
+    description: "Only health claims authorised in the EU Register (Art. 13/14) may be used"
+    detect:
+      llm_check: "Is this a health claim that is not present on the EU authorised health claims list?"
+    fix_hint: "Match wording to an authorised claim, or remove the health claim"
+    source: "Regulation (EC) No 1924/2006, Art. 10 & 13"
+
+  - id: EU-MISLEADING
+    category: exaggeration
+    severity: major
+    description: "Claims must not be false, ambiguous or misleading, nor encourage excess consumption"
+    detect:
+      regex: ['100\s*%', '\bmiracle\b', '\bguaranteed\b', '\bno side effects?\b']
+      keywords: ["completely safe", "eat as much as you want"]
+    fix_hint: "Remove absolute/misleading wording; ensure claims are substantiated"
+    source: "Regulation (EC) No 1924/2006, Art. 3"
+
+  - id: EU-RATE-OF-WEIGHT-LOSS
+    category: prohibited_claim
+    severity: major
+    description: "Claims about the rate or amount of weight loss are prohibited"
+    detect:
+      regex: ['lose\s+\d+\s*(kg|kilograms?|pounds?|lbs?)', 'lose weight in \d+ (days?|weeks?)']
+      llm_check: "Does this state a specific rate or amount of weight loss?"
+    fix_hint: "Remove specific weight-loss figures and timeframes"
+    source: "Regulation (EC) No 1924/2006, Art. 12(b)"

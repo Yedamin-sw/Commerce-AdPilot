@@ -12,6 +12,7 @@ from backend.middlewares.openai import (
     generate_multichannel_copy,
     _create_client
 )
+from backend.regulations import Violation, build_repair_instructions, check_full as compliance_check, render_rules
 
 router = APIRouter()
 
@@ -183,7 +184,7 @@ def build_prompt(
     tone: str, core_message: str,
     forbidden_words: str, channel,
     tnm: str, length: str, purpose: str,
-    name: str = "", features: str = ""
+    name: str = "", features: str = "", country: str = "KR"
 ) -> str:
 
     print("[DEBUG] build_prompt")
@@ -204,6 +205,17 @@ def build_prompt(
         if tnm and tnm.strip() else ""
     )
 
+    # backend/regulations 룰셋 기반 준수사항 블록 (국가별). 룰셋이 없는 국가는
+    # 최소 하드코딩 폴백으로 — 생성 자체가 막히면 안 되므로.
+    try:
+        rules_block = render_rules(country, None if channel == "default" else channel)
+    except FileNotFoundError:
+        rules_block = (
+            "'완치 보장', '부작용 없음', '100% 효과', '즉시 낫는다' 등 과장·단정 표현 사용 금지\n"
+            "모든 광고에 전문의·약사 상담 권장 또는 용법·용량 확인 안내 문구 포함\n"
+            "효능·효과는 허가 범위 내 표현만 사용"
+        )
+
     prompt = f"""당신은 국내 의약품 광고 전문 카피라이터입니다.
 아래 지침을 모두 반영하여 완성도 높은 광고 문구를 작성하세요.
 
@@ -223,12 +235,11 @@ def build_prompt(
 ▌ {_build_purpose_instruction(purpose)}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▌ 의약품 광고 필수 준수사항
+▌ {rules_block}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. '완치 보장', '부작용 없음', '100% 효과', '즉시 낫는다' 등 과장·단정 표현 사용 금지
-2. 모든 광고에 전문의·약사 상담 권장 또는 용법·용량 확인 안내 문구 포함
-3. 효능·효과는 식약처 허가 범위 내 표현만 사용
-4. 오직 아래 입력된 제품명({name})만 사용할 것 — 다른 임의의 제품명 절대 사용 금지
+▌ 추가 규칙
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+오직 아래 입력된 제품명({name})만 사용할 것 — 다른 임의의 제품명 절대 사용 금지
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ▌ 작성 방식
@@ -268,6 +279,7 @@ async def _call_openai(
     user_content: str,
     semaphore: asyncio.Semaphore,
     retry: int = DEFAULT_RETRY,
+    temperature: float = 0.75,   # 창의성 ↑ (0.7보다 약간 높게). 교정 재생성 시엔 낮춰서 호출.
 ) -> tuple[bool, str]:
     client = _create_client()
     last_err = ""
@@ -280,7 +292,7 @@ async def _call_openai(
                         {"role": "system", "content": prompt},
                         {"role": "user",   "content": user_content},
                     ],
-                    temperature=0.75,   # 창의성 ↑ (0.7보다 약간 높게)
+                    temperature=temperature,
                     max_tokens=2000,    # 장문 생성 시 잘리지 않도록
                 )
                 return True, response.choices[0].message.content
@@ -289,6 +301,32 @@ async def _call_openai(
         if attempt < retry:
             await asyncio.sleep(2 ** attempt)
     return False, f"[ERROR] {last_err}"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 생성 + 규제 검증 (자동 재작성 없음 — 위반은 report로만 피드백, 수정은 사용자가 직접)
+# ──────────────────────────────────────────────────────────────────────────────
+async def _generate_checked(
+    prompt: str,
+    user_content: str,
+    semaphore: asyncio.Semaphore,
+    country: str,
+    channel: str,
+    forbidden_words: str,
+    retry: int = DEFAULT_RETRY,
+):
+    ok, text = await _call_openai(prompt, user_content, semaphore, retry=retry)
+    if not ok:
+        return ok, text, None
+
+    extra_banned = [w.strip() for w in (forbidden_words or "").split(",") if w.strip()]
+
+    try:
+        report = await compliance_check(text, country=country, channel=channel, extra_banned=extra_banned)
+    except FileNotFoundError:
+        return ok, text, None  # 알 수 없는 country → 검증 건너뜀 (카피는 그대로 반환)
+
+    return ok, text, report
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -306,6 +344,7 @@ class request(BaseModel):
     category: str = ""
     features: str = ""
     target_audience: str = ""
+    country: str = "KR"
 
 class request_file(BaseModel):
     name: str
@@ -345,7 +384,7 @@ async def generate_normal(req: GenerateRequest):
         purpose=req.purpose,
         name=req.name,
         features=req.features,
-    )
+    )  # GenerateRequest엔 country 필드가 없음 → build_prompt 기본값(KR) 사용
     ok, text = await _call_openai(prompt=prompt, user_content=user_content, semaphore=semaphore)
     return {"ok": ok, "result": text}
 
@@ -362,26 +401,89 @@ async def generate_platform(req: request):
     tasks = []
 
     for ch in channels:
+        ch_norm = ch.strip().lower()
         prompt = build_prompt(
             tone=req.tone,
             core_message=req.core_message,
             forbidden_words=req.forbidden_words,
-            channel=[ch.strip().lower()],
+            channel=[ch_norm],
             tnm=req.tnm,
             length=req.length,
             purpose=req.purpose,
             name=req.name,
             features=req.features,
+            country=req.country,
         )
-        tasks.append(_call_openai(prompt, user_content, semaphore))
+        tasks.append(_generate_checked(
+            prompt, user_content, semaphore,
+            country=req.country, channel=ch_norm, forbidden_words=req.forbidden_words,
+        ))
 
-    pairs = await asyncio.gather(*tasks)
+    triples = await asyncio.gather(*tasks)
     return {
         "results": [
-            {"channel": ch, "ok": ok, "text": txt}
-            for ch, (ok, txt) in zip(channels, pairs)
+            {
+                "channel": ch, "ok": ok, "text": txt,
+                "compliance": report.model_dump() if report else None,
+            }
+            for ch, (ok, txt, report) in zip(channels, triples)
         ]
     }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 2-1) 피드백 반영 재생성 (자동 아님 — "재생성" 버튼 클릭 시에만 1회 호출)
+# 화면에 이미 떠 있는 violations를 그대로 받아 build_repair_instructions로 재작성 지시문을 만들고,
+# 같은 프롬프트 뒤에 붙여 1회 재생성 → 재검증까지 하고 결과를 돌려준다.
+# ──────────────────────────────────────────────────────────────────────────────
+class RegenerateRequest(BaseModel):
+    tone: str
+    core_message: str
+    forbidden_words: str
+    channel: str            # 재생성은 채널 하나만
+    tnm: str
+    length: str
+    purpose: str
+    name: str = ""
+    category: str = ""
+    features: str = ""
+    target_audience: str = ""
+    country: str = "KR"
+    violations: list[Violation] = []   # 화면에 표시 중이던 위반 목록 그대로
+
+
+@router.post("/regenerate-with-feedback")
+async def regenerate_with_feedback(req: RegenerateRequest):
+    print("[DEBUG] regenerate_with_feedback")
+    ch = (req.channel or "default").strip().lower()
+    prompt = build_prompt(
+        tone=req.tone,
+        core_message=req.core_message,
+        forbidden_words=req.forbidden_words,
+        channel=[ch],
+        tnm=req.tnm,
+        length=req.length,
+        purpose=req.purpose,
+        name=req.name,
+        features=req.features,
+        country=req.country,
+    )
+    if req.violations:
+        prompt = prompt + "\n\n" + build_repair_instructions(req.violations)
+
+    user_content = _format_user_content(req.dict())
+    semaphore = asyncio.Semaphore(1)
+    ok, text = await _call_openai(prompt, user_content, semaphore, temperature=0.4)
+    if not ok:
+        return {"ok": False, "text": text, "compliance": None}
+
+    extra_banned = [w.strip() for w in (req.forbidden_words or "").split(",") if w.strip()]
+    try:
+        report = await compliance_check(text, country=req.country, channel=ch, extra_banned=extra_banned)
+    except FileNotFoundError:
+        report = None
+
+    return {"ok": ok, "text": text, "compliance": report.model_dump() if report else None}
 
 
 @router.post("/multichannel-copy")
@@ -403,6 +505,7 @@ async def generate_csv(
     file: UploadFile = File(...),
     language: str = Form("ko"),
     channel: str | None = Form(None),
+    country: str = Form("KR"),   # 행에 country 컬럼이 있으면 그게 우선, 없으면 이 값
     async_mode: bool = Form(False),
     async_threshold: int = Form(50),
 ):
@@ -416,47 +519,61 @@ async def generate_csv(
     else:
         raise HTTPException(status_code=400, detail="CSV 또는 엑셀 파일만 업로드 가능합니다.")
 
-    rows = df.to_dict(orient="records")
+    # 빈 칸은 NaN이 아니라 빈 문자열로 — build_prompt 등에서 .strip() 호출 시 NaN 크래시 방지
+    rows = df.fillna("").to_dict(orient="records")
     if not rows:
         raise HTTPException(status_code=400, detail="비어있는 파일입니다.")
 
     if async_mode or len(rows) > async_threshold:
-        job_id = _create_job(rows, language, channel)
+        job_id = _create_job(rows, language, channel, country)
         background_tasks.add_task(_run_bulk_job, job_id)
         return {"job_id": job_id, "status": "queued", "total": len(rows), "poll": f"/api/generate/csv/status/{job_id}"}
 
-    results = await _process_rows(rows, language, channel)
+    results = await _process_rows(rows, language, channel, country)
     return {"results": results, "total": len(results)}
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 일괄 처리 내부 함수들
 # ──────────────────────────────────────────────────────────────────────────────
-def _create_job(rows: list[dict], language: str, channel: str | None) -> str:
+def _row_country(row: dict, default_country: str) -> str:
+    return str(row.get("country") or default_country or "KR").strip().upper()
+
+
+def _create_job(rows: list[dict], language: str, channel: str | None, country: str = "KR") -> str:
     product_id = str(uuid.uuid4())
     Products[product_id] = {
         "status": "queued",
         "total": len(rows), "done": 0, "success": 0, "failed": 0,
         "results": [], "started_at": None, "finished_at": None,
-        "_rows": rows, "_language": language, "_channel": channel,
+        "_rows": rows, "_language": language, "_channel": channel, "_country": country,
     }
     return product_id
 
 
-async def _process_rows(rows: list[dict], language: str, default_channel: str | None) -> list[dict]:
+async def _process_rows(rows: list[dict], language: str, default_channel: str | None, default_country: str = "KR") -> list[dict]:
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
     async def _one(i: int, row: dict) -> dict:
         ch = (row.get("channel") or default_channel or "default").strip().lower()
+        row_country = _row_country(row, default_country)
         prompt = build_prompt(
             tone=row.get("tone", ""), core_message=row.get("core_message", ""),
             forbidden_words=row.get("forbidden_words", ""), channel=ch,
             tnm=row.get("tnm", ""), length=row.get("length", ""),
             purpose=row.get("purpose", ""),
             name=row.get("name", ""), features=row.get("features", ""),
+            country=row_country,
         )
-        ok, text = await _call_openai(prompt=prompt, user_content=_format_user_content(row), semaphore=semaphore)
-        return {"index": i, "input": row, "ok": ok, "result": text}
+        ok, text, report = await _generate_checked(
+            prompt, _format_user_content(row), semaphore,
+            country=row_country, channel=ch,
+            forbidden_words=row.get("forbidden_words", ""),
+        )
+        return {
+            "index": i, "input": row, "ok": ok, "result": text,
+            "compliance": report.model_dump() if report else None,
+        }
 
     return await asyncio.gather(*[_one(i, r) for i, r in enumerate(rows)])
 
@@ -469,18 +586,24 @@ async def _run_bulk_job(product_id: str):
 
     async def _one(i: int, row: dict):
         ch = (row.get("channel") or job["_channel"] or "default").strip().lower()
+        row_country = _row_country(row, job.get("_country", "KR"))
         prompt = build_prompt(
             tone=row.get("tone", ""), core_message=row.get("core_message", ""),
             forbidden_words=row.get("forbidden_words", ""), channel=ch,
             tnm=row.get("tnm", ""), length=row.get("length", ""),
             purpose=row.get("purpose", ""),
             name=row.get("name", ""), features=row.get("features", ""),
+            country=row_country,
         )
-        ok, text = await _call_openai(
-            prompt=prompt, user_content=_format_user_content(row),
-            semaphore=semaphore, retry=DEFAULT_RETRY,
+        ok, text, report = await _generate_checked(
+            prompt, _format_user_content(row), semaphore,
+            country=row_country, channel=ch,
+            forbidden_words=row.get("forbidden_words", ""), retry=DEFAULT_RETRY,
         )
-        job["results"].append({"index": i, "input": row, "ok": ok, "result": text})
+        job["results"].append({
+            "index": i, "input": row, "ok": ok, "result": text,
+            "compliance": report.model_dump() if report else None,
+        })
         job["done"] = len(job["results"])
         if ok: job["success"] += 1
         else:  job["failed"] += 1
@@ -571,21 +694,25 @@ async def _retry_failed_items(job_id: str, retry: int):
     async def _one(idx: int):
         row = job["_rows"][idx]
         ch = (row.get("channel") or job["_channel"] or "default").strip().lower()
-        ok, text = await _call_openai(
-            prompt=build_prompt(
-                tone=row.get("tone", ""), core_message=row.get("core_message", ""),
-                forbidden_words=row.get("forbidden_words", ""), channel=ch,
-                tnm=row.get("tnm", ""), length=row.get("length", ""),
-                purpose=row.get("purpose", ""),
-                name=row.get("name", ""), features=row.get("features", ""),
-            ),
-            user_content=_format_user_content(row),
-            semaphore=semaphore, retry=retry,
+        row_country = _row_country(row, job.get("_country", "KR"))
+        prompt = build_prompt(
+            tone=row.get("tone", ""), core_message=row.get("core_message", ""),
+            forbidden_words=row.get("forbidden_words", ""), channel=ch,
+            tnm=row.get("tnm", ""), length=row.get("length", ""),
+            purpose=row.get("purpose", ""),
+            name=row.get("name", ""), features=row.get("features", ""),
+            country=row_country,
+        )
+        ok, text, report = await _generate_checked(
+            prompt, _format_user_content(row), semaphore,
+            country=row_country, channel=ch,
+            forbidden_words=row.get("forbidden_words", ""), retry=retry,
         )
         for r in job["results"]:
             if r["index"] == idx:
                 was_failed = not r["ok"]
                 r["ok"] = ok; r["result"] = text
+                r["compliance"] = report.model_dump() if report else None
                 if ok and was_failed:
                     job["success"] += 1; job["failed"] -= 1
                 break

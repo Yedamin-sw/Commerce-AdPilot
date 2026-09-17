@@ -10,7 +10,7 @@ parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from backend.api import generate
+from backend.api import compliance, generate
 
 # 프로젝트 루트의 .env 로드
 env_path = Path(__file__).resolve().parents[1] / '.env'
@@ -42,6 +42,7 @@ app.add_middleware(
 if auth is not None:
     app.include_router(auth.router,    prefix="/api/auth")
 app.include_router(generate.router,    prefix="/api/generate")
+app.include_router(compliance.router,  prefix="/api/compliance")
 if history is not None:
     app.include_router(history.router, prefix="/api/history")
 if product is not None:

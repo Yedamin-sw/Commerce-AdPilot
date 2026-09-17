@@ -1,0 +1,54 @@
+# United States — advertising rule set (draft / heuristic)
+# ─────────────────────────────────────────────────────────────────────────────
+# ⚠️ Starter rules written by hand. Requires legal / regulatory review before
+#    production use.
+# References:
+#   - FDA — dietary supplements: structure/function claims only (21 U.S.C. 343(r)(6))
+#   - DSHEA disclaimer requirement (21 CFR 101.93)
+#   - FTC Act §5 — unfair or deceptive advertising; "Health Products Compliance Guidance"
+# ─────────────────────────────────────────────────────────────────────────────
+country: US
+version: "2025-01"
+source: "FDA / FTC / DSHEA (21 U.S.C. 343(r)(6), 21 CFR 101.93, FTC Act §5)"
+
+rules:
+  - id: US-DISEASE-CLAIM
+    category: prohibited_claim
+    severity: critical
+    description: "Disease claims are prohibited for dietary supplements; only structure/function claims are allowed"
+    detect:
+      keywords: ["cure", "cures", "treat", "treats", "prevent disease", "diagnose", "heals disease", "reverses"]
+      llm_check: "Does this claim state or imply that the product treats, cures, mitigates, or prevents a disease?"
+    fix_hint: "Reframe as a structure/function claim (e.g. 'supports a healthy immune system')"
+    source: "21 U.S.C. 343(r)(6)"
+
+  - id: US-DSHEA-DISCLAIMER
+    category: mandatory_statement
+    severity: major
+    description: "FDA disclaimer required whenever a structure/function claim is made"
+    detect:
+      require_any_of:
+        - "has not been evaluated by the Food and Drug Administration"
+        - "not intended to diagnose, treat, cure, or prevent any disease"
+    fix_hint: "Add the full DSHEA disclaimer text near the claim"
+    source: "21 CFR 101.93(b)"
+
+  - id: US-UNSUBSTANTIATED
+    category: exaggeration
+    severity: major
+    description: "Unsubstantiated, exaggerated, or guaranteed-result claims (deceptive advertising)"
+    detect:
+      regex: ['100\s*%', '\bguaranteed\b', '\bmiracle\b', '\bclinically proven\b', '\binstant results?\b']
+      keywords: ["no side effects", "completely safe", "works for everyone"]
+    fix_hint: "Use claims backed by competent and reliable scientific evidence; drop absolutes"
+    source: "FTC Act §5 / FTC Health Products Compliance Guidance"
+
+  - id: US-FALSE-ENDORSEMENT
+    category: prohibited_claim
+    severity: major
+    description: "Implying professional/government endorsement without basis"
+    detect:
+      regex: ['\b(FDA|doctor|physician)\s+(approved|recommended|endorsed)\b']
+      llm_check: "Does this imply endorsement by the FDA or a health professional that is not substantiated?"
+    fix_hint: "Remove endorsement language unless it is real, current, and disclosed"
+    source: "FTC Endorsement Guides (16 CFR Part 255)"

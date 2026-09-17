@@ -1,0 +1,1585 @@
+# =============================================================================
+# 한국 의약품 광고 / 건강기능식품 표시·광고 규제 룰셋
+# =============================================================================
+# 주의:
+# - 본 YAML은 사용자가 제공한 식약처 문서를 기준으로 구조화한 것이다.
+# - severity / score는 원문에 명시된 법적 점수가 아니므로 포함하지 않는다.
+# - detect / llm_check는 원문 내용을 자동 판정 시스템에 적용하기 위한
+#   구조화 표현이며, 실제 법적 판단과 동일하지 않다.
+# - 의약품 가이드라인은 광고의 적정성을 광고주체, 목적, 구체적 내용,
+#   허가사항 및 일반소비자가 받아들이는 전체적·궁극적 인상을 종합하여
+#   개별 판단한다고 설명한다.
+# - 실제 서비스 적용 전 최신 법령 및 심의기준 검수가 필요하다.
+# =============================================================================
+
+country: KR
+
+sources:
+
+  - id: SRC-DRUG-GUIDELINE-2022
+    name: "의약품광고 및 전문의약품 정보제공 가이드라인"
+    issuer: "식품의약품안전처 의약품안전국 의약품관리과"
+    date: "2022-11-30"
+    document_version: "안내서-0017-03"
+    scope:
+      - "의약품 광고"
+      - "전문의약품 정보제공"
+    note: >
+      본 안내서는 2022년 11월 30일 현재의 과학적·기술적 사실 및
+      유효한 법규를 토대로 작성되었으며 대외적으로 법적 효력을 가지는
+      문서는 아니라고 명시되어 있다.
+
+  - id: SRC-HFF-GUIDELINE-2014
+    name: "건강기능식품 표시 및 광고 심의기준"
+    issuer: "식품의약품안전처"
+    date: "2014-02-12"
+    document_version: "식품의약품안전처고시 제2014-29호"
+    scope:
+      - "건강기능식품 기능성 표시"
+      - "건강기능식품 기능성 광고"
+
+# =============================================================================
+# 공통 메타 / 판단 원칙
+# =============================================================================
+
+general_principles:
+
+  - id: GENERAL-001
+    category: judgment_principle
+    description: >
+      의약품 광고의 적정성은 광고주체와 목적, 구체적인 내용,
+      허가사항 및 일반소비자가 받아들이는 전체적·궁극적 인상을
+      종합하여 개별적으로 판단한다.
+    source: SRC-DRUG-GUIDELINE-2022
+    detect:
+      llm_check: >
+        해당 광고를 단일 문구만으로 판단하지 않고 광고주체, 목적,
+        전체 내용, 허가사항 및 소비자가 받아들이는 전체적 인상을
+        함께 검토했는가?
+
+  - id: GENERAL-002
+    category: legal_status
+    description: >
+      의약품광고 및 전문의약품 정보제공 가이드라인은 식품의약품안전처의
+      입장을 설명하는 안내서이며 대외적으로 법적 효력을 가지는 문서는 아니다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# I. 의약품 광고
+# =============================================================================
+
+drug_advertising:
+
+  definition:
+
+    - id: DRUG-DEF-001
+      category: definition
+      description: >
+        의약품 제조업자·품목허가를 받은 자·수입자 등이 의약품의 명칭,
+        제조방법, 효능 또는 성능 등을 널리 알릴 목적으로 관련 매체를
+        이용하여 불특정 다수에게 널리 알리거나 제시하는 행위.
+      target:
+        - "일반 소비자"
+        - "의·약학 전문가"
+      source: SRC-DRUG-GUIDELINE-2022
+
+  advertising_media:
+
+    - id: DRUG-MEDIA-001
+      category: advertising_media
+      description: "신문·방송 또는 잡지"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-002
+      category: advertising_media
+      description: "전단·팸플릿·견본 또는 입장권"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-003
+      category: advertising_media
+      description: "인터넷 또는 컴퓨터통신"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-004
+      category: advertising_media
+      description: "포스터·간판·네온사인·애드벌룬 또는 전광판"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-005
+      category: advertising_media
+      description: >
+        비디오물·음반·서적·간행물·영화 또는 연극
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-006
+      category: advertising_media
+      description: "방문광고 또는 실연에 의한 광고"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-007
+      category: advertising_media
+      description: >
+        자기의 의약품등의 용기나 포장 또는 다른 상품의 용기나 포장.
+        다만 법령에 따라 용기·포장 등에 기재된 사항은 광고에 해당하지
+        않을 수 있음.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-MEDIA-008
+      category: advertising_media
+      description: "그 밖에 위 매체와 유사한 매체 또는 수단"
+      source: SRC-DRUG-GUIDELINE-2022
+
+  prohibited_rules:
+
+    - id: DRUG-001
+      category: false_or_exaggerated
+      description: >
+        의약품의 명칭·제조방법·효능·성능에 관하여 거짓광고 또는
+        과장광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          광고 내용이 허가·신고사항과 다르거나 과학적·객관적으로
+          사실 여부를 확인·증명할 수 없는 내용을 사실인 것처럼
+          표현하거나 지나치게 부풀리고 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-002
+      category: approval_mismatch
+      description: >
+        제품의 명칭·품질·제조방법·용법·용량·효능·성능 등에 관하여
+        허가 또는 신고한 사항 외의 광고를 하지 않아야 한다.
+      exception:
+        - >
+          식품의약품안전처장이 인정하는 공정서 및 의약품집에 실려 있는 내용
+        - >
+          의학적·약학적으로 공인된 범위의 임상결과 등 근거문헌을 인용하는 경우
+      detect:
+        llm_check: >
+          광고 내용이 국내 허가 또는 신고된 사항의 범위를 벗어나 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-003
+      category: expert_endorsement
+      description: >
+        의사·치과의사·한의사·약사 또는 그 밖의 자가 특정 의약품을
+        지정·공인·추천·지도 또는 사용하고 있다는 내용의 광고를 하지 않아야 한다.
+      exception:
+        - >
+          국민보건을 위하여 국가·지방자치단체 또는 공공단체가
+          특정 의약품을 지정하여 사용하고 있다는 사실을 광고하는 경우
+      detect:
+        keywords:
+          - "의사 추천"
+          - "약사 추천"
+          - "의사가 인정한"
+          - "약사가 인정한"
+          - "전문가 추천"
+          - "의사 강력 추천"
+        llm_check: >
+          의료전문가 또는 전문가 집단이 특정 의약품을 추천·공인·보증하거나
+          사용하고 있는 것처럼 표현하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-004
+      category: expert_endorsement
+      description: >
+        의약품의 효능이나 성능에 관하여 의사·치과의사·한의사·수의사
+        또는 그 밖의 자가 보증한 것으로 오해할 염려가 있는 기사를
+        사용하지 않아야 한다.
+      detect:
+        llm_check: >
+          기사나 콘텐츠가 전문가가 해당 의약품의 효능·성능을 보증한 것처럼
+          소비자에게 인식될 가능성이 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-005
+      category: evidence_claim
+      description: >
+        허가받은 사항 외 제품 특징, 약리기전, 효능 또는 성능을 광고하는 경우
+        근거문헌 등을 통해 공인된 객관적 내용임을 입증할 수 있어야 한다.
+      requirements:
+        - "근거문헌의 본뜻을 정확히 전달"
+        - "연구자 성명 기재"
+        - "문헌명 기재"
+        - "발표 연월일 기재"
+        - "출처를 정확히 확인할 수 있도록 구체적으로 표시"
+      detect:
+        llm_check: >
+          허가사항 외의 주장에 객관적이고 공인된 근거문헌이 존재하며
+          문헌의 내용과 광고 표현이 일치하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-006
+      category: consumer_deception
+      description: >
+        사실과 다르거나, 부분적으로는 사실이더라도 전체적으로 보면
+        소비자가 오인할 우려가 있는 광고 또는 소비자를 속이거나
+        속을 우려가 있는 광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          보통의 주의력을 가진 일반 소비자가 광고를 전체적으로 받아들였을 때
+          실제 제품의 효능·품질·안전성 등에 대해 잘못 이해할 가능성이 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-007
+      category: misleading_comparison
+      description: >
+        원산지, 상표, 로고 등의 표시를 통해 제품의 품질·안전성·효능이
+        실제보다 우수하다고 오인하게 하거나 제조자 등을 잘못 인식하게
+        할 수 있는 광고에 주의해야 한다.
+      detect:
+        llm_check: >
+          원산지·상표·로고 등의 강조로 실제 품질이나 제조관계에 대한
+          잘못된 인식을 유발하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-008
+      category: superiority_claim
+      description: >
+        '판매 1위' 등의 표현은 객관성이 있는 자료를 근거로 구체적이고
+        정확하게 광고하는 경우에는 소비자 오인광고로 판단되지 않을 수 있다.
+      conditions:
+        - "최근 3년 이내 자료"
+        - "해당 연도"
+        - "대상품목"
+        - "해당 분야"
+        - "객관적 자료"
+      detect:
+        regex:
+          - '(판매|매출|업계)\s*(량\s*)?1\s*위'
+          - '부동의\s*1\s*위'
+        llm_check: >
+          1위 또는 우월성 표현에 객관적인 비교기간·대상품목·분야 등의
+          근거가 구체적으로 제시되어 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-009
+      category: giveaway
+      description: >
+        현상품·사은품 등 경품류를 제공하는 방법으로 의약품을 광고하지 않아야 한다.
+      detect:
+        keywords:
+          - "사은품"
+          - "경품"
+          - "선착순 증정"
+          - "1+1"
+          - "덤 증정"
+          - "추첨을 통해"
+        llm_check: >
+          의약품 구매 또는 광고 참여를 유도하기 위해 경품·사은품·경제적
+          이익 등을 제공하거나 제공한다고 광고하고 있는가?
+      exceptions:
+        - >
+          의약품 사용에 도움을 주기 위한 물품을 의·약사를 통해 구매자 또는
+          처방받은 환자에게 별도 제공하는 경우
+        - >
+          제품개선을 위한 소비자 설문조사·공모 후 통상적으로 지급하는 정당한 대가
+        - "제품홍보 목적이 아닌 공익적 목적의 기부 등"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-010
+      category: free_distribution
+      description: >
+        의약품을 현상품·사은품 등 경품이나 무료로 제공하는 방법으로
+        광고하지 않아야 한다.
+      detect:
+        keywords:
+          - "무료 증정"
+          - "무료로 드립니다"
+          - "공짜"
+          - "무상 제공"
+        llm_check: >
+          의약품 자체를 경품 또는 무료 제공 대상으로 홍보하고 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-011
+      category: disparagement
+      description: >
+        사실 여부와 관계없이 다른 제품을 비방하거나 비방하는 것으로
+        의심되는 광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          다른 의약품의 효능·용법·품질 등의 단점을 부각하여 자사 제품보다
+          열등하거나 불리한 것처럼 소비자가 인식하게 하는가?
+      comparison:
+        allowed_direction: >
+          유용하고 정확한 정보 제공을 목적으로 성분 또는 제형 등을
+          객관적 근거에 따라 비교할 수 있다.
+        caution:
+          - "비교대상 의약품은 유효성분의 일반명칭을 사용하는 것이 적절"
+          - "타사 제품명을 직접 또는 암시적으로 거론하는 것은 부적절"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-012
+      category: testimonial
+      description: >
+        사용자의 감사장 또는 체험담을 이용하거나 구입·주문이 쇄도한다는
+        등의 표현을 사용하는 광고를 하지 않아야 한다.
+      detect:
+        keywords:
+          - "실제 후기"
+          - "체험담"
+          - "감사장"
+          - "주문 폭주"
+          - "구매 후기"
+          - "써보고 놀랐어요"
+        llm_check: >
+          개인 사용후기·체험담·감사장 또는 구매 쇄도 등을 이용하여
+          의약품의 효능·효과를 강조하거나 신뢰성을 높이고 있는가?
+      management:
+        - >
+          제조·수입자가 소비자 작성 후기를 캡처·인용·요약하여 광고에 사용하는 경우
+          위반으로 판단될 수 있음
+        - >
+          업체 또는 제품과 관련된 SNS·인터넷사이트에 소비자가 작성한
+          효능 관련 체험담이 포함되는 경우 관리가 필요함
+        - >
+          업체 영향력 또는 관리 하에 있는 사이트의 체험담은 정기적인 관리가 필요함
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-013
+      category: vulgar_or_disgusting
+      description: >
+        노래 가사에 제품명을 사용하거나 제품명을 계속해서 부르는 방법,
+        또는 저속하거나 혐오감을 주는 표현을 사용하는 광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          광고가 저속하거나 혐오감을 주거나 폭력적·선정적인 표현을
+          사용하는가?
+      caution:
+        - "성관계를 연상시키는 표현"
+        - "신체부위 과다노출 이미지"
+        - "폭력적 표현"
+        - "선정적 표현"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-014
+      category: misuse_abuse
+      description: >
+        의약품을 오용하게 하거나 남용하게 할 우려가 있는 광고를
+        하지 않아야 한다.
+      detect:
+        llm_check: >
+          광고가 의약품의 부적절한 사용, 과량 사용, 잘못된 대상에 대한 사용,
+          오남용 등을 유발할 가능성이 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-015
+      category: mandatory_statement   # 원문 category는 required_caution — require_any_of 검사(Layer1)와
+                                       # render.py의 "반드시 포함할 안내 문구" 묶음에 태우려고 여기서만 변경
+      original_category: required_caution
+      description: >
+        소비자에게 부작용 및 사용상 주의사항을 알리고 의·약사와
+        상의하도록 하는 주의문구를 표시해야 한다.
+      detect:
+        require_any_of:
+          - "전문의"
+          - "약사와 상담"
+          - "약사와 상의"
+          - "의사와 상담"
+          - "의·약사"
+          - "의사 또는 약사"
+          - "주의사항을 잘 읽고"
+          - "사용상의 주의사항"
+        llm_check: >
+          해당 광고에서 요구되는 소비자 주의사항 및 의·약사 상담 안내가
+          적절하게 표시되어 있는가?
+      example_statement:
+        - "부작용이 있을 수 있으니 첨부된 사용상의 주의사항을 잘 읽고 의사·약사와 상의하십시오."
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-016
+      category: child_safety
+      description: >
+        어린이가 광고모델로 나오는 의약품 광고에서 어린이가 직접
+        의약품을 복용하거나 사용하는 장면을 광고하지 않아야 한다.
+      detect:
+        llm_check: >
+          어린이가 광고에서 직접 의약품을 복용하거나 사용하는 장면이 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-017
+      category: absolute_claim
+      description: >
+        효능·효과를 확실히 보증한다는 내용 또는 '최고', '최상' 등의
+        절대적 표현을 사용하는 광고를 하지 않아야 한다.
+      detect:
+        keywords:
+          - "최고"
+          - "최상"
+          - "확실히 보증"
+          - "100%"
+          - "완치"
+          - "부작용 없음"
+        llm_check: >
+          광고가 효능·효과를 확실히 보증하거나 최고·최상 등 절대적
+          우월성을 나타내는가?
+      caution:
+        - "100% 완치"
+        - "부작용 없음"
+        - "부작용 0%"
+        - "항체생성률 100%"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-018
+      category: safety_overclaim
+      description: >
+        부작용이 있는 의약품에 대하여 부작용을 부정하거나 부당하게
+        안전성을 강조하는 표현을 사용하지 않아야 한다.
+      detect:
+        keywords:
+          - "부작용 없음"
+          - "부작용 전혀 없"
+          - "부작용 0%"
+          - "100% 안전"
+          - "안전성 100%"
+        llm_check: >
+          실제 부작용 가능성을 무시하거나 의약품이 부작용 없이 안전하다는
+          인상을 주는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-019
+      category: target_restriction
+      description: >
+        광고대상을 효능·효과와 무관하게 특정 대상자로 한정하여 해당
+        대상자에게 오용 또는 남용을 유발할 우려가 있는 광고를 하지 않아야 한다.
+      conditions:
+        allowed_when:
+          - >
+            '소아용', '남성용' 등의 표현이 허가받은 효능·효과 및
+            용법·용량에 따라 실제 특정 연령층·성별을 대상으로 판단할 수 있는 경우
+      detect:
+        llm_check: >
+          허가된 효능·효과 및 용법·용량과 관계없이 특정 연령·성별 등을
+          임의로 대상으로 지정하고 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-020
+      category: product_confusion
+      description: >
+        의약품을 의약품이 아닌 것으로 오인하게 할 우려가 있는 광고를
+        하지 않아야 한다.
+      detect:
+        llm_check: >
+          의약품을 화장품, 미용제품 또는 일반 생활제품 등 의약품이 아닌
+          것으로 오인하게 만들 가능성이 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-021
+      category: non_active_ingredient
+      description: >
+        주성분이 아닌 성분의 효능·효과를 표시하는 광고를 하지 않아야 한다.
+      conditions:
+        allowed:
+          - >
+            유효성분으로 허가받은 효능·효과와 관련이 있는 경우
+          - >
+            패키지 제품의 맛·향 등에 대해 첨가제라는 사실과 허가된
+            배합목적을 제공하는 수준
+      caution:
+        - >
+          주성분이 아닌 성분을 유효성분처럼 광고하지 않아야 한다.
+      detect:
+        llm_check: >
+          첨가제 등 주성분이 아닌 성분에 직접적인 약리효과가 있는 것처럼
+          효능·효과를 부여하고 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-022
+      category: endangered_species
+      description: >
+        멸종 위기에 놓인 야생 동·식물의 가공품임을 표현하거나 암시하는
+        광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          제품이 멸종위기 야생 동·식물의 가공품임을 표현하거나 암시하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-023
+      category: disease_implication
+      description: >
+        대중광고가 금지된 품목을 특정 질병 등으로 나타내어 암시하는
+        광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          대중광고가 금지된 의약품을 특정 질병명이나 질병 치료와 연결하여
+          일반 소비자가 해당 품목을 쉽게 추론할 수 있도록 하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-024
+      category: threatening_expression
+      description: >
+        효능·효과와 관련되는 병의 증상이나 수술장면을 위협적으로
+        표시하거나 암시하는 광고를 하지 않아야 한다.
+      detect:
+        keywords:
+          - "방치하면"
+          - "치료하지 않으면"
+          - "그대로 두면 위험"
+          - "방치할 경우"
+        llm_check: >
+          질병의 증상 또는 수술장면을 위협적·공포적인 방식으로 보여주어
+          의약품 사용을 유도하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-025
+      category: child_media
+      description: >
+        아동을 대상으로 하는 방송프로그램이나 아동용 잡지 등의
+        인쇄물을 통하여 소아용 의약품을 광고하지 않아야 한다.
+      detect:
+        llm_check: >
+          광고 매체가 아동 대상 방송프로그램 또는 아동용 잡지 등의
+          인쇄물이고 소아용 의약품 광고가 이루어지고 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-026
+      category: domestic_foreign_confusion
+      description: >
+        외국제품을 국내제품으로 또는 국내제품을 외국제품으로 오인하게
+        할 우려가 있는 광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          제품의 국적·제조국·수입 여부 등에 대해 소비자가 잘못 인식할
+          가능성이 있는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-027
+      category: foreign_trademark
+      description: >
+        불법적으로 외국 상표·상호를 사용하거나 거짓으로 외국과
+        기술제휴 등을 표현하는 광고를 하지 않아야 한다.
+      detect:
+        llm_check: >
+          외국 상표·상호 또는 기술제휴 관계를 사실과 다르게 표현하는가?
+      source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 인터넷 / SNS 광고
+# =============================================================================
+
+drug_internet:
+
+  - id: DRUG-WEB-001
+    category: internet_advertising
+    description: >
+      블로그, SNS, 온라인 커뮤니티, 모바일 앱 등에서 광고하는 경우
+      인터넷 또는 유사 매체를 통한 광고로서 관련 약사법령을 준수해야 한다.
+    channels:
+      - "blog"
+      - "SNS"
+      - "online_community"
+      - "mobile_app"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-WEB-002
+    category: advertising_review
+    description: >
+      제품·업체 홈페이지, 블로그, SNS, 온라인 커뮤니티, 모바일 앱에서
+      보여지는 광고성 내용도 광고심의 대상이 될 수 있다.
+    detect:
+      llm_check: >
+        해당 온라인 콘텐츠가 제품 또는 업체의 광고성 내용인지 판단하고
+        광고심의 대상 여부를 확인한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-WEB-003
+    category: advertiser_managed_content
+    description: >
+      제조·수입업체 또는 관련 광고대행업체·판매업체가 생산하는
+      실시간 정보에 광고성 내용이 포함되는 경우 광고 관련 법령을 준수해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-WEB-004
+    category: third_party_management
+    description: >
+      제조·수입자가 기획·지원하는 제3자 게재 내용의 적절성을 확인하고
+      잘못된 정보가 지속 유통되지 않도록 적절한 조치를 취하는 것이 권장된다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-WEB-005
+    category: mandatory_statement   # 원문 category는 advertising_disclosure
+    original_category: advertising_disclosure
+    description: >
+      블로그 등의 인터넷 광고에서는 소비자 오인을 최소화하기 위해
+      해당 정보가 광고임을 알기 쉽게 밝히는 조치가 필요하다.
+    detect:
+      require_any_of:
+        - "광고"
+        - "[광고]"
+        - "[AD]"
+        - "AD"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-WEB-006
+    category: qr_code
+    description: >
+      용기·포장에 QR코드를 기재하여 허가 또는 신고된 의약품 정보를
+      확인할 수 있게 하는 경우에도 광고 관련 약사법령을 준수해야 한다.
+    allowed_example:
+      - "QR코드를 통해 허가사항만 확인할 수 있도록 하는 경우"
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 방송 간접광고
+# =============================================================================
+
+drug_broadcast:
+
+  - id: DRUG-BROADCAST-001
+    category: indirect_advertising
+    description: >
+      방송프로그램 안에서 상품·상표·회사·서비스의 명칭이나 로고 등을
+      노출하는 간접광고는 방송법 및 광고 관련 약사법령을 준수해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-BROADCAST-002
+    category: prescription_drug_indirect_ad
+    description: >
+      대중광고가 금지된 전문의약품은 방송매체를 통한 간접광고가 금지된다.
+    detect:
+      condition:
+        product_type: "prescription_drug"
+        medium: "broadcast"
+        advertising_type: "indirect"
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 기사형 광고 / 보도자료
+# =============================================================================
+
+drug_article_advertising:
+
+  - id: DRUG-ARTICLE-001
+    category: article_advertising
+    description: >
+      효능·성능을 암시하는 기사·사진·도안 또는 그 밖의 암시적 방법을
+      사용하여 광고하지 않아야 한다.
+    detect:
+      llm_check: >
+        기사·사진·도안 등이 특정 의약품의 효능·성능을 암시하는
+        광고 형태로 사용되고 있는가?
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-ARTICLE-002
+    category: sponsored_article
+    description: >
+      업체가 경제적 대가를 지급하여 기사화하는 경우 광고행위로
+      간주될 수 있다.
+    detect:
+      llm_check: >
+        업체가 경제적 대가를 제공하여 특정 제품 또는 효능을 기사 형태로
+        노출하도록 한 것인가?
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-ARTICLE-003
+    category: press_release
+    description: >
+      객관적이고 입증 가능한 자료를 바탕으로 기업의 정상적인 활동의
+      일환으로 판단되는 보도자료 배포만으로는 의약품 광고에 해당하지
+      않는 것으로 사료될 수 있다.
+    conditions:
+      - "객관적 자료"
+      - "입증 가능한 자료"
+      - "기업의 정상적인 활동"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-ARTICLE-004
+    category: advertorial
+    description: >
+      허가사항과 동일한 내용이라도 언론에서 효능을 인정하는 것처럼
+      암시하여 오남용을 유발할 우려가 있는 기사 형식의 광고는
+      소비자 오인 우려가 있어 위반될 수 있다.
+    detect:
+      llm_check: >
+        기사 형식을 이용하여 언론이나 기자가 특정 의약품의 효능을
+        인정·추천하는 것처럼 소비자에게 인식시키는가?
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 소비자 대상 강연
+# =============================================================================
+
+drug_consumer_lecture:
+
+  - id: DRUG-LECTURE-001
+    category: consumer_event
+    description: >
+      의약품 관련 업체가 자사제품과 관련하여 일반소비자 대상 강연 등을
+      개최하는 경우 방문광고 또는 실연에 의한 광고로 해석될 수 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-LECTURE-002
+    category: expert_recommendation
+    description: >
+      의약전문가를 초빙한 강좌는 전문가 추천광고 등 광고 관련 법령
+      위반 우려가 없도록 진행해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-LECTURE-003
+    category: educational_information
+    description: >
+      특정 제품을 강조하지 않고 질환 및 치료법에 대해 객관적·과학적
+      근거를 바탕으로 일반소비자에게 설명하는 건강강좌는 정보제공 사례로
+      제시되어 있다.
+    allowed_conditions:
+      - "특정 제품 스폰서를 강조하지 않음"
+      - "객관적·과학적 근거"
+      - "소비자가 이해하기 쉬운 설명"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-LECTURE-004
+    category: product_recommendation
+    description: >
+      강의 중 특정 제품명을 언급하여 추천하거나, 의사와 특정 제품을
+      함께 배치하여 의사가 해당 품목을 추천·보증하는 것으로 연상되게
+      하는 행위는 부적절한 사례로 제시되어 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 사전피임제 대중광고
+# =============================================================================
+
+drug_contraceptive:
+
+  - id: DRUG-CONTRA-001
+    category: contraceptive_public_ad
+    description: >
+      사전피임제 대중광고 시 복용법, 부작용, 여성의 선택권 등
+      공익성 강화정책을 고려해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-CONTRA-002
+    category: contraceptive_dosage
+    category_detail: "required_information"
+    description: >
+      사전피임제 대중광고에서 복용법 등의 소비자 주의사항이
+      광고내용에 포함될 수 있도록 한다.
+    example_information:
+      - "21일 복용 후 7일간 복용하지 않는다는 복용법"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-CONTRA-003
+    category: contraceptive_side_effect
+    description: >
+      사전피임제 대중광고에서 두통·메스꺼움·혈전 등 부작용 정보를
+      소비자에게 제공할 수 있도록 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-CONTRA-004
+    category: contraceptive_choice
+    description: >
+      피임약이 여성이 선택할 수 있는 피임방법 중 하나라는 여성의
+      선택권 관련 정보를 포함하는 정책이 제시되어 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-CONTRA-005
+    category: professional_consultation
+    description: >
+      사전피임제 대중광고에서 의사·약사와 상의하고 장기 사용할 경우
+      주기적으로 병의원 진료를 받도록 안내하는 내용이 제시되어 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: DRUG-CONTRA-006
+    category: fear_appeal
+    description: >
+      청소년 등의 피임제 안전사용을 위해 주기를 변경하거나 연장하는
+      용법을 부각하는 광고는 부적절하다고 제시되어 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 전문의약품 대중광고
+# =============================================================================
+
+prescription_drug:
+
+  prohibited:
+
+    - id: RX-001
+      category: public_advertising
+      description: >
+        전문의약품은 원칙적으로 대중광고가 금지된다.
+      exceptions:
+        - >
+          감염병의 예방용 의약품에 해당하는 경우
+        - >
+          의학·약학에 관한 전문가 등을 대상으로 하는 의약전문매체
+        - >
+          의학·약학에 관한 전문가 등을 대상으로 하는 학술적 성격의
+          매체 또는 수단
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RX-002
+      category: same_composition_otc
+      description: >
+        전문의약품과 제형, 투여경로 및 단위제형당 주성분 함량이 같은
+        일반의약품도 대중광고 제한 대상에 포함된다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RX-003
+      category: active_pharmaceutical_ingredient
+      description: "원료의약품은 대중광고 금지 대상에 포함된다."
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RX-004
+      category: disease_implication
+      description: >
+        대중광고가 금지된 품목을 특정 질병 등으로 나타내어 암시하는
+        광고를 하지 않아야 한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RX-005
+      category: waiting_room_exposure
+      description: >
+        전문의약품 광고물을 환자대기실, 의료기관 복도 등에 비치하는 행위는
+        전문의약품 대중광고로 간주될 수 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RX-006
+      category: search_ad
+      description: >
+        인터넷 검색사이트에 광고비를 지급하여 파워링크 등의 방법으로
+        전문의약품 제품명 또는 효능·효과가 쉽게 노출되도록 광고하는
+        행위는 부적절한 사례로 제시되어 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RX-007
+      category: public_product_merchandise
+      description: >
+        전문의약품 제품명이 기재된 볼펜·우산 등을 불특정 다수 일반인에게
+        제공하는 사례가 부적절한 사례로 제시되어 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 질환정보 제공 활동
+# =============================================================================
+
+prescription_disease_information:
+
+  - id: RXINFO-001
+    category: disease_information
+    description: >
+      제약회사가 주관하는 질환정보제공 활동은 국민 건강 또는 공중보건에
+      영향을 미칠 수 있는 특정 질환에 대한 사회적 인식 제고를 위해
+      일반 대중에게 질환 정보를 제공하는 활동을 의미한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXINFO-002
+    category: product_linkage
+    description: >
+      특정 의약품명을 직접 또는 간접적으로 누구나 쉽게 추론할 수 있도록
+      언급하는 경우 의약품 광고로 취급될 수 있다.
+    detect:
+      llm_check: >
+        질환정보를 제공하면서 특정 제품 또는 특정 성분을 소비자가
+        쉽게 추론할 수 있도록 연결하고 있는가?
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXINFO-003
+    category: objective_information
+    description: >
+      질환의 특징, 원인, 예후, 진단, 예방, 처치, 치료요법 등의 정보를
+      의약학적으로 공인된 정보를 근거로 객관적·중립적으로 전달해야 한다.
+    requirements:
+      - "질환의 특징"
+      - "원인"
+      - "예후"
+      - "진단"
+      - "예방"
+      - "처치"
+      - "치료요법"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXINFO-004
+    category: balanced_treatment_information
+    description: >
+      예방·처치·치료요법을 설명할 경우 식이요법, 생활습관 개선,
+      수술요법 등을 균형적으로 전달해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXINFO-005
+    category: professional_consultation
+    description: "정확한 진단은 의·약사 등 전문가와 상의하도록 안내해야 한다."
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXINFO-006
+    category: update_management
+    description: >
+      질환정보제공 활동의 목적을 달성할 수 있도록 정보 작성일을 표시하고
+      주기적으로 업데이트하여 올바른 정보가 제공되도록 노력해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 전문의약품 정보제공
+# =============================================================================
+
+prescription_information:
+
+  general:
+
+    - id: RXINFO-GEN-001
+      category: professional_information
+      description: >
+        전문의약품 정보제공은 의·약사 등 전문가를 대상으로 하는
+        의약전문매체 또는 학술적 성격의 매체·수단을 이용하는 경우를
+        중심으로 한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-002
+      category: safe_use
+      description: >
+        전문의약품 정보는 의약품의 안전하고 유효한 사용을 목적으로
+        제공해야 한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-003
+      category: evidence
+      description: >
+        제공되는 정보가 의약학적으로 공인되었는지 및 객관적 사실인지
+        입증 가능한 경우에 정보를 제공해야 한다.
+      evidence:
+        allowed_forms:
+          - "근거자료 원문"
+          - "근거자료 초록"
+          - "국문 번역본"
+        source_fields:
+          - "연구자명"
+          - "문헌명"
+          - "저널명"
+          - "발표 연월일"
+          - "권호"
+          - "쪽수"
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-004
+      category: manufacturer_identification
+      description: >
+        정보에 대한 책임소재와 투명성을 확보하기 위해 제공주체를
+        확인할 수 있어야 한다.
+      caution: >
+        업체명이나 제품명을 두드러지게 표시하는 경우 전문의약품
+        대중광고로 간주될 수 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-005
+      category: official_material
+      description: >
+        식품의약품안전처의 온라인의약도서관에서 제공하는 의약품
+        안전사용매뉴얼 및 환자용 설명서 등을 우선 활용할 것을 권장한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-006
+      category: false_information
+      description: >
+        허가받지 않은 효능·효과 또는 허위 논문자료 등 거짓 정보를
+        제공하는 경우 전문의약품의 거짓·과장광고로 간주될 수 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-007
+      category: consumer_confusion
+      description: >
+        전문의약품 정보를 일반 소비자에게 널리 알리는 경우
+        전문의약품 대중광고로 간주될 수 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: RXINFO-GEN-008
+      category: consultation_notice
+      description: >
+        전문의약품은 질병 상태 등에 따라 의·약사의 처방 및 복약지도가
+        우선적이며 전문가와 상담해야 한다는 소비자 주의문구를
+        쉽게 볼 수 있도록 표시하는 것이 필요하다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 전문의약품 자사 홈페이지
+# =============================================================================
+
+prescription_company_website:
+
+  - id: RXWEB-001
+    category: official_company_website
+    description: >
+      자사홈페이지란 의약품 품목허가자 또는 수입자의 명칭으로 개설한
+      공식 대표홈페이지를 말하며, 사전에 의약품광고심의위원회에
+      통보한 사이트에서 전문의약품 정보제공이 가능하다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-002
+    category: allowed_information
+    description: >
+      허가사항 범위 내 제품명, 효능·효과, 용법·용량, 부작용 등의
+      정보를 제공할 수 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-003
+    category: promotional_content
+    description: >
+      허가받은 사실과 다르거나 과장된 내용 등 홍보·판매촉진 목적의
+      내용은 거짓·과장광고로 약사법에 위반될 수 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-004
+    category: accessibility
+    description: >
+      어르신, 시각장애인 등 취약계층을 위해 큰 글씨 첨부문서 파일이나
+      음성변환 출력이 가능한 첨부문서 파일을 제공할 수 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-005
+    category: safe_use_media
+    description: >
+      흡입기, 점안제, 인슐린, 성장호르몬제 등 사용 시 주의가 필요한
+      의약품에 대해 안전하고 효과적인 사용을 위한 동영상·이미지 자료를
+      제공할 수 있다.
+    conditions:
+      - "적정성 여부에 대한 증빙자료"
+      - "사전 심의위원회 검토 요청 가능"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-006
+    category: professional_material
+    description: >
+      허가받은 전문의약품의 효능, 주의사항 등에 대한 논문 전문 또는
+      논문 초록과 같이 의약학적 전문적인 판단이 필요한 상세자료를
+      게재할 수 있다.
+    conditions:
+      - "구독자가 전문가임을 확인하는 접근경로"
+      - "소비자 오인 최소화 조치"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-007
+    category: homepage_popup
+    description: >
+      자사홈페이지 첫 화면에서 특정 제품을 팝업창이나 배너 등으로
+      일방적으로 노출하면 대중광고로 간주될 수 있다.
+    recommended:
+      - "사용자가 필요한 정보를 검색하여 제공받는 방식"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-008
+    category: sales_promotion
+    description: >
+      전문의약품 정보제공이 판매촉진을 위한 우회수단이 되지 않도록
+      해야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: RXWEB-009
+    category: redistribution
+    description: >
+      인터넷을 통해 정보가 본래 목적과 다르게 사용되거나 부정확한
+      정보가 추가 생산되는 것을 방지하기 위한 기술적 조치를 권장한다.
+    examples:
+      - "다운로드 금지"
+      - "관련 고지"
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 전문의약품 환자지원 웹사이트 / 모바일 앱
+# =============================================================================
+
+patient_support:
+
+  - id: PATIENT-001
+    category: patient_information
+    description: >
+      허가범위 내 전문적인 정보를 이해하기 쉬운 환자용 사용설명서로
+      제작하여 의·약사를 통해 처방받은 환자에게 개별 제공하는 것은
+      대중광고가 아닌 것으로 해석할 수 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: PATIENT-002
+    category: patient_support_site
+    description: >
+      제품 광고 목적이 아니라 복약 순응도를 높이기 위한 투약법 등의
+      정보를 제공할 필요성이 있는 경우 환자지원 웹사이트·모바일 앱을
+      개설할 수 있다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: PATIENT-003
+    category: access_control
+    description: >
+      환자지원 웹사이트·모바일 앱은 처방받은 환자 또는 보호자만
+      접근할 수 있도록 조치해야 한다.
+    access_methods:
+      - "ID/PW"
+      - "QR code"
+      - "barcode"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: PATIENT-004
+    category: scope_limitation
+    description: >
+      환자지원 웹사이트·모바일 앱에는 처방받은 제품 정보 외 회사홈페이지,
+      다른 제품의 정보 사이트로 이동하거나 다른 제품의 정보를 제공하지
+      않아야 한다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: PATIENT-005
+    category: medication_adherence
+    description: >
+      의약품 투약 및 복약 순응도에 도움이 되는 정보·기능을 제공해야 한다.
+    allowed_information:
+      - "제품 설명서 내용"
+      - "투약 방법 안내"
+      - "복용시간 알람"
+      - "환자용 사용설명서"
+      - "안전성 정보"
+      - "안전성 보고"
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: PATIENT-006
+    category: professional_guidance
+    description: "반드시 의·약사에게 복약지도를 받을 것을 명시해야 한다."
+    source: SRC-DRUG-GUIDELINE-2022
+
+  - id: PATIENT-007
+    category: direct_distribution
+    description: >
+      전문의약품 복약지도용 자료는 원칙적으로 의·약사 등 전문가를
+      통해 처방받은 환자에게 개별적으로 제공하는 방식이 권장된다.
+    source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 건강기능식품 표시·광고 심의
+# =============================================================================
+
+health_functional_food:
+
+  scope:
+
+    - id: HFF-SCOPE-001
+      category: review_scope
+      description: "건강기능식품의 기능성 표시"
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-SCOPE-002
+      category: review_scope
+      description: "건강기능식품의 기능성 광고"
+      source: SRC-HFF-GUIDELINE-2014
+
+  review_exceptions:
+
+    - id: HFF-EXEMPT-001
+      category: deemed_reviewed
+      description: >
+        법 제14조 또는 제15조에 따라 건강기능식품 기준·규격으로 고시되었거나
+        인정된 기능성 내용만을 그대로 표시·광고하는 경우.
+      condition: >
+        품목제조신고 또는 수입신고 시 해당 표시 내용을 기관에 제출하여
+        신고수리된 경우에 한함.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-EXEMPT-002
+      category: deemed_reviewed
+      description: >
+        동일한 건강기능식품 주원료(영양소 또는 기능성 원료)를 사용하여
+        제조한 제품을 이미 심의·심사받은 내용과 동일하게 표시·광고하는 경우.
+      condition: >
+        해당 영업자가 기존 심의 또는 심사를 받은 내용과 동일하게
+        표시·광고하는 경우.
+      source: SRC-HFF-GUIDELINE-2014
+
+  review_criteria:
+
+    - id: HFF-001
+      category: policy_alignment
+      description: >
+        국민의 건강증진 및 소비자보호에 관한 국가의 건강기능식품정책에
+        부합해야 한다.
+      detect:
+        llm_check: >
+          해당 기능성 표시·광고가 국민 건강증진 및 소비자보호라는
+          정책 취지에 부합하는가?
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-002
+      category: functional_benefit
+      description: >
+        인체의 구조 및 기능에 대하여 생리학적 작용 등과 같은 보건용도에
+        유용한 효과에 대한 표현이어야 한다.
+      detect:
+        llm_check: >
+          표현하고 있는 효과가 인체의 구조·기능 또는 생리학적 작용 등과
+          관련된 보건용도의 유용한 효과인가?
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-003
+      category: scientific_evidence
+      description: "객관적이고 과학적인 근거자료에 의해 표현되어야 한다."
+      detect:
+        llm_check: >
+          기능성 표현을 객관적이고 과학적인 근거자료로 뒷받침할 수 있는가?
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-004
+      category: clarity
+      description: >
+        이해하기 쉽고 올바른 문장이나 용어를 사용하여 명확하게
+        표현해야 한다.
+      detect:
+        llm_check: >
+          일반 소비자가 이해하기 쉬운 올바른 문장과 용어를 사용하여
+          기능성을 명확하게 표현하고 있는가?
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-005
+      category: approved_functionality
+      description: >
+        법 제14조 또는 제15조에 따라 안전성 및 기능성에 관한 건강기능식품의
+        기준·규격 또는 원료·성분으로 고시되었거나 인정된 내용에 부합해야 한다.
+      detect:
+        llm_check: >
+          표시·광고 내용이 고시되거나 인정된 안전성 및 기능성 내용의
+          범위에 부합하는가?
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-006
+      category: labeling_standard
+      description: "법 제17조에 따른 표시기준에 적합해야 한다."
+      detect:
+        llm_check: >
+          해당 표시·광고가 건강기능식품 표시기준에 적합한가?
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-007
+      category: false_or_exaggerated
+      description: >
+        법 제18조에 따른 허위·과대의 표시·광고 범위에 해당해서는 안 된다.
+      detect:
+        keywords:
+          - "완치"
+          - "100% 효과"
+          - "부작용 없음"
+          - "최고의 효과"
+          - "즉시 효과"
+        llm_check: >
+          해당 표시·광고가 허위 또는 과대의 표시·광고에 해당할 가능성이 있는가?
+      source: SRC-HFF-GUIDELINE-2014
+
+# =============================================================================
+# 건강기능식품 심의 신청 / 절차
+# =============================================================================
+
+health_functional_food_review_process:
+
+  application:
+
+    - id: HFF-PROC-001
+      category: application_document
+      description: "기능성 표시·광고내용을 제출해야 한다."
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-PROC-002
+      category: application_document
+      description: >
+        품목제조신고증 또는 수입신고증 사본을 제출한다.
+        단, 품목제조신고 또는 수입신고를 필한 제품에 한한다.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-PROC-003
+      category: application_document
+      description: "제조 또는 수입하고자 하는 제품의 제품설명서를 제출한다."
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-PROC-004
+      category: reference_material
+      description: "필요한 경우 기타 심의에 도움이 될 수 있는 참고자료를 제출할 수 있다."
+      source: SRC-HFF-GUIDELINE-2014
+
+  review:
+
+    - id: HFF-PROC-005
+      category: review_period
+      description: >
+        심의기관은 신청받은 날부터 10일 이내에 심의 결과를
+        신청인에게 문서로 통지한다.
+      exceptions:
+        - "부득이한 사유로 처리할 수 없는 경우 지연 사유와 처리 예정 기한을 통보"
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-PROC-006
+      category: minor_change
+      description: >
+        심의받은 내용 중 일부 삭제 또는 심의받은 내용에 변화를 주지 않는
+        정도의 단순 수정은 별도 심의를 받지 않을 수 있다.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-PROC-007
+      category: media_change
+      description: >
+        심의받은 내용을 변경하지 않고 광고매체 또는 광고제작사 등을
+        변경하는 경우 별도 심의를 받지 않을 수 있다.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-PROC-008
+      category: resubmission
+      description: >
+        수정 내용이 최초 심의 결과와 다른 내용의 표시·광고로 인정되면
+        다시 심의를 받아야 한다.
+      source: SRC-HFF-GUIDELINE-2014
+
+  reconsideration:
+
+    - id: HFF-REVIEW-001
+      category: reconsideration
+      description: >
+        심의 결과에 이의가 있는 신청인은 결과를 통지받은 날부터
+        1개월 이내에 심의기관에 재심의를 요청할 수 있다.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-REVIEW-002
+      category: reconsideration_period
+      description: >
+        재심의 신청을 받은 심의기관은 신청받은 날부터 10일 이내에
+        재심의 결과를 문서로 통지한다.
+      source: SRC-HFF-GUIDELINE-2014
+
+  objection:
+
+    - id: HFF-OBJECTION-001
+      category: objection
+      description: >
+        심의 또는 재심의 결과에 이의가 있는 자는 결과를 통지받은 날부터
+        1개월 이내에 식품의약품안전처장에게 이의신청을 할 수 있다.
+      required_documents:
+        - "기능성 표시·광고내용"
+        - "(재)심의결과 통보서 사본"
+        - "필요한 경우 기타 참고자료"
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-OBJECTION-002
+      category: objection_review
+      description: >
+        식품의약품안전처장은 건강기능식품 표시·광고분과위원회의 자문을
+        받아 이의신청을 심사할 수 있다.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-OBJECTION-003
+      category: objection_result
+      description: "이의신청 결과는 수용 또는 불수용으로 결정한다."
+      condition:
+        accepted_case: >
+          수용 결정 시 기능성 표시·광고 내용을 일부 수정·보완할 것을
+          조건으로 붙일 수 있다.
+      source: SRC-HFF-GUIDELINE-2014
+
+    - id: HFF-OBJECTION-004
+      category: objection_period
+      description: >
+        식품의약품안전처장은 이의신청을 받은 날부터 10일 이내에
+        심사 결과를 통지한다.
+      source: SRC-HFF-GUIDELINE-2014
+
+  review_result:
+
+    - id: HFF-RESULT-001
+      category: review_mark
+      description: >
+        심의를 받은 내용을 광고하고자 하는 경우 광고에 심의를 받았다는
+        사실을 표시할 수 있다.
+      source: SRC-HFF-GUIDELINE-2014
+
+# =============================================================================
+# 의약품 광고 심의 절차
+# =============================================================================
+
+drug_advertising_review_process:
+
+  review_target:
+
+    - id: DRUG-REVIEW-001
+      category: pre_review
+      description: >
+        의약품 제조업자·품목허가를 받은 자 또는 수입자가 의약품을
+        광고하려는 경우 관련 매체·수단에 따라 광고심의를 받아야 한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+  application:
+
+    - id: DRUG-REVIEW-002
+      category: application_document
+      description: "의약품 광고내용 1부를 제출한다."
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-REVIEW-003
+      category: application_document
+      description: "의약품 설명서 1부를 제출한다."
+      source: SRC-DRUG-GUIDELINE-2022
+
+  review_period:
+
+    - id: DRUG-REVIEW-004
+      category: review_period
+      description: >
+        광고심의기관은 신청일부터 10일 이내에 광고심의 결과를
+        신청인에게 서면으로 통지한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+  objection:
+
+    - id: DRUG-REVIEW-005
+      category: objection
+      description: >
+        심의 결과에 이의가 있는 경우 결과를 통지받은 날부터
+        10일 이내에 광고심의기관에 이의신청할 수 있다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-REVIEW-006
+      category: objection_period
+      description: >
+        이의신청을 받은 광고심의기관은 이의신청을 받은 날부터
+        10일 이내에 다시 심의하여 결과를 서면으로 알려야 한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+  modification:
+
+    - id: DRUG-REVIEW-007
+      category: content_change
+      description: >
+        심의받은 광고내용을 변경하여 광고하려면 변경 내용에 대해
+        다시 심의를 받아야 한다.
+      source: SRC-DRUG-GUIDELINE-2022
+
+    - id: DRUG-REVIEW-008
+      category: text_edit
+      description: >
+        광고내용을 변경하지 않는 범위에서 자구를 수정하거나 삭제하여
+        광고하는 경우에는 별도 심의를 받지 않을 수 있다.
+      condition:
+        - "수정 사실을 사전에 광고심의기관에 통보"
+      source: SRC-DRUG-GUIDELINE-2022
+
+  review_mark:
+
+    - id: DRUG-REVIEW-009
+      category: review_mark
+      description: "심의받은 내용을 광고하려면 심의받은 사실을 광고에 표시해야 한다."
+      source: SRC-DRUG-GUIDELINE-2022
+
+# =============================================================================
+# 자동화 판정용 입력 스키마
+# =============================================================================
+
+input_schema:
+
+  product:
+    required:
+      - "product_type"
+    fields:
+      product_type:
+        enum:
+          - "prescription_drug"
+          - "otc_drug"
+          - "health_functional_food"
+          - "food"
+          - "unknown"
+      product_name:
+        type: "string"
+      approval_status:
+        type: "string"
+      approved_indications:
+        type: "array"
+      approved_dosage:
+        type: "string"
+
+  advertisement:
+    required:
+      - "text"
+    fields:
+      text:
+        type: "string"
+      channel:
+        type: "string"
+      target:
+        type: "string"
+      media:
+        type: "string"
+      visual_description:
+        type: "string"
+      sponsored:
+        type: "boolean"
+      expert_appearance:
+        type: "boolean"
+      testimonial_present:
+        type: "boolean"
+      evidence_provided:
+        type: "boolean"
+
+# =============================================================================
+# 자동 판정 결과 스키마
+# =============================================================================
+
+result_schema:
+
+  fields:
+
+    compliant:
+      type: "boolean"
+
+    applicable_rules:
+      type: "array"
+      item_fields:
+        rule_id:
+          type: "string"
+        triggered:
+          type: "boolean"
+        confidence:
+          type: "number"
+        evidence:
+          type: "string"
+        reason:
+          type: "string"
+
+    required_review:
+      type: "boolean"
+
+    requires_human_review:
+      type: "boolean"
+
+    recommended_fix:
+      type: "array"
+
+    source_reference:
+      type: "array"
+
+# =============================================================================
+# 휴리스틱 점수 정책
+# =============================================================================
+# 아래 부분은 "법령상 공식 점수"가 아니라 자동화 서비스에서 별도로
+# 정의해야 하는 내부 정책이다.
+#
+# 현재는 실제 법적 판단과 혼동하지 않도록 점수를 고정하지 않는다.
+# 서비스 개발 시 별도의 scoring_policy 파일/섹션으로 정의하는 것을 권장한다.
+# =============================================================================
+
+scoring_policy:
+
+  status: "not_defined"
+
+  note: >
+    제공된 문서에는 위반행위별 0~100점 등의 공식 규제점수가 제시되어
+    있지 않다. 따라서 점수는 서비스 운영자가 별도로 정의해야 한다.
+
+  recommended_model:
+
+    - "규칙별 탐지"
+    - "중복 위반 제거"
+    - "제품 유형별 적용 규칙 필터링"
+    - "허가사항 일치 여부 확인"
+    - "근거자료 존재 여부 확인"
+    - "광고 매체 및 대상 확인"
+    - "전문의약품 여부 확인"
+    - "최종적으로 human_review 필요 여부 판단"
+
+  important:
+    - >
+      동일한 사실이 거짓·과장, 소비자 오인, 절대적 표현 등
+      여러 규칙에 동시에 해당할 수 있으므로 단순 합산 방식은
+      중복 산정 가능성이 있다.
+    - >
+      의약품 광고의 적정성은 개별 사안의 전체적·궁극적 인상을
+      종합하여 판단하므로 LLM 또는 전문가 검토 단계가 필요하다.
+    - >
+      건강기능식품은 기능성 내용이 고시·인정된 범위에 부합하는지,
+      객관적·과학적 근거가 있는지, 표시기준에 적합한지를 함께
+      확인해야 한다.

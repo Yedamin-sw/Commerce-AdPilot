@@ -3,14 +3,49 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  Play, FileText, CheckCircle2, Upload, History, 
+import {
+  Play, FileText, CheckCircle2, Upload, History,
   Plus, ChevronDown, Zap, Settings2, Camera, Share2, X, Type,
   Video, Music, ShoppingBag, RefreshCw, AlertCircle, CheckCircle
 } from 'lucide-react';
+import type { ComplianceReport } from '@/components/compliance';
+import { CSV_RESULT_STORAGE_KEY, type CsvRow } from '@/components/csv-result-shared';
+
+// /api/generate/csv, /csv/preview 응답의 결과 항목 한 개 (필요한 필드만)
+interface CsvApiResultItem {
+  index: number;
+  input?: { name?: string; channel?: string; features?: string };
+  ok: boolean;
+  result: string;
+  compliance?: ComplianceReport;
+}
+
+// 백엔드 /api/generate/csv 결과 한 행 → csv-result 페이지가 읽는 형태로 변환해
+// sessionStorage에 저장 (history에는 안 남김, 탭 닫으면 사라지는 일회성 결과).
+function storeCsvResults(fileName: string, rawResults: CsvApiResultItem[]): boolean {
+  const items: CsvRow[] = rawResults.map(r => ({
+    index: r.index,
+    name: r.input?.name || `행 ${r.index + 1}`,
+    channel: String(r.input?.channel || 'default').toLowerCase(),
+    features: r.input?.features || '',
+    ok: r.ok,
+    text: r.ok ? r.result : `[생성 실패] ${r.result}`,
+    compliance: r.compliance ?? undefined,
+  }));
+  try {
+    sessionStorage.setItem(
+      CSV_RESULT_STORAGE_KEY,
+      JSON.stringify({ fileName, items, storedAt: Date.now() })
+    );
+    return items.length > 0;
+  } catch {
+    return false; // 세션 스토리지 접근 실패 — "결과 보기" 버튼만 숨겨지고 업로드 자체는 정상
+  }
+}
 
 // ── CSV 업로드 모달 ────────────────────────────────────────────
 function CsvUploadModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging]     = useState(false);
@@ -21,6 +56,7 @@ function CsvUploadModal({ onClose }: { onClose: () => void }) {
   const [jobResult, setJobResult]       = useState<{
     total: number; success?: number; failed?: number;
   } | null>(null);
+  const [hasViewableResult, setHasViewableResult] = useState(false);
 
   const backendUrl =
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_BACKEND_URL) ||
@@ -79,6 +115,7 @@ function CsvUploadModal({ onClose }: { onClose: () => void }) {
         const success = data.results.filter((r: any) => r.ok).length;
         const failed  = data.results.filter((r: any) => !r.ok).length;
         setJobResult({ total: data.total, success, failed });
+        setHasViewableResult(storeCsvResults(selectedFile.name, data.results));
         setUploadState('done');
         setStatusMsg(`✅ 생성 완료! 총 ${data.total}개 중 성공 ${success}개`);
         return;
@@ -108,6 +145,14 @@ function CsvUploadModal({ onClose }: { onClose: () => void }) {
         setStatusMsg(`처리 중... ${data.done}/${total} (${Math.round(data.progress * 100)}%)`);
         if (data.status === 'completed') {
           setJobResult({ total: data.total, success: data.success, failed: data.failed });
+          // 상태 응답엔 결과 텍스트가 없어서(개수만 옴) preview로 전체 행을 따로 받아옴
+          try {
+            const prevRes  = await fetch(`${backendUrl}/api/generate/csv/preview/${jobId}?limit=${total}`);
+            const prevData = await prevRes.json();
+            setHasViewableResult(storeCsvResults(selectedFile?.name ?? 'csv', prevData.items ?? []));
+          } catch {
+            setHasViewableResult(false); // 미리보기를 못 받아와도 업로드 자체는 완료 처리
+          }
           setUploadState('done');
           setStatusMsg(`✅ 완료! 총 ${data.total}개 중 성공 ${data.success}개, 실패 ${data.failed}개`);
           return;
@@ -214,12 +259,21 @@ function CsvUploadModal({ onClose }: { onClose: () => void }) {
         {/* 버튼 영역 */}
         <div className="flex gap-2">
           {uploadState === 'done' ? (
-            <button
-              onClick={onClose}
-              className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition"
-            >
-              완료 — 닫기
-            </button>
+            hasViewableResult ? (
+              <button
+                onClick={() => router.push('/workspace/csv-result')}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition"
+              >
+                결과 보기 →
+              </button>
+            ) : (
+              <button
+                onClick={onClose}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition"
+              >
+                완료 — 닫기
+              </button>
+            )
           ) : (
             <button
               onClick={handleUpload}
@@ -238,7 +292,7 @@ function CsvUploadModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl transition"
           >
-            취소
+            {uploadState === 'done' ? '닫기' : '취소'}
           </button>
         </div>
       </div>

@@ -9,6 +9,10 @@ import {
   RefreshCw, Download, Copy, ChevronRight, X,
   Clock, Check, Video, ShoppingBag, Music, Camera, Share2
 } from 'lucide-react';
+import {
+  type ComplianceReport,
+  ComplianceBadges, ViolationCards, highlightViolations, summarizeCompliance,
+} from '@/components/compliance';
 
 // ── 채널 메타 정보 ──────────────────────────────────────────────
 const CHANNEL_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -30,12 +34,16 @@ function getGridCols(count: number): string {
 
 // ── 채널 결과 카드 ───────────────────────────────────────────────
 function ChannelCard({
-  channel, text, originalContext, productName, isLoading, onCopy, onDownload,
+  channel, text, originalContext, productName, isLoading, compliance, complianceLoading,
+  isRegenerating, onCopy, onDownload, onRegenerateWithFeedback,
 }: {
   channel: string; text: string; originalContext: string;
   productName: string; isLoading: boolean;
+  compliance?: ComplianceReport; complianceLoading: boolean;
+  isRegenerating: boolean;
   onCopy: (text: string, label: string) => void;
   onDownload: (text: string, filename: string) => void;
+  onRegenerateWithFeedback: (channel: string) => void;
 }) {
   const meta = CHANNEL_META[channel] ?? { label: channel, icon: <FileText size={16} />, color: 'text-slate-500' };
 
@@ -48,13 +56,18 @@ function ChannelCard({
     );
   }
 
+  const matchedTerms = compliance?.violations.map(v => v.matched_text).filter((t): t is string => !!t) ?? [];
+
   return (
     <div className="p-6 space-y-4 text-left">
       {/* 카드 헤더 */}
       <div className="flex justify-between items-center">
-        <h5 className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${meta.color}`}>
-          {meta.icon} {meta.label}
-        </h5>
+        <div className="flex items-center gap-2">
+          <h5 className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${meta.color}`}>
+            {meta.icon} {meta.label}
+          </h5>
+          <ComplianceBadges compliance={compliance} loading={complianceLoading} />
+        </div>
         <div className="flex gap-2 text-slate-300">
           <Copy
             size={14}
@@ -81,9 +94,24 @@ function ChannelCard({
       <div>
         <p className="text-[10px] font-bold text-blue-400 uppercase mb-2 italic">AI Generated Copy</p>
         <div className="text-xs text-slate-700 leading-relaxed border border-blue-100 p-4 rounded-xl bg-blue-50/20 whitespace-pre-wrap min-h-[120px]">
-          {text || '생성된 카피가 없습니다.'}
+          {text ? highlightViolations(text, matchedTerms) : '생성된 카피가 없습니다.'}
         </div>
       </div>
+
+      {/* 규제 위반 · 수정 포인트 */}
+      <ViolationCards violations={compliance?.violations ?? []} />
+
+      {/* 피드백 반영 재생성 — 자동 아님, 클릭했을 때만 1회 재생성 */}
+      {compliance && compliance.violations.length > 0 && (
+        <button
+          onClick={() => onRegenerateWithFeedback(channel)}
+          disabled={isRegenerating}
+          className="flex items-center justify-center gap-2 w-full py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 disabled:opacity-40 transition"
+        >
+          <RefreshCw size={13} className={isRegenerating ? 'animate-spin' : ''} />
+          {isRegenerating ? '피드백 반영해서 재생성 중...' : '🪄 피드백 반영해서 재생성'}
+        </button>
+      )}
     </div>
   );
 }
@@ -128,6 +156,11 @@ function ResultContent() {
   const [progress,    setProgress]    = useState(10);
   const [toastMsg,    setToastMsg]    = useState('');
   const [results,     setResults]     = useState<Record<string, string>>({});
+  const [compliance,  setCompliance]  = useState<Record<string, ComplianceReport>>({});
+  const [complianceLoading, setComplianceLoading] = useState(false);
+  const [regeneratingChannels, setRegeneratingChannels] = useState<Set<string>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedProductId, setSavedProductId] = useState<number | null>(null);
 
   const showToast = (msg: string) => setToastMsg(msg);
 
@@ -189,11 +222,131 @@ function ResultContent() {
     }
   };
 
+  // ── 결과 저장 (제품 등록 → 채널별 ad_contents 저장) ──
+  const handleSaveResults = async () => {
+    if (isLoading) { showToast('⚠️ 생성이 완료된 후 저장하세요.'); return; }
+    const validChannels = selectedChannels.filter(
+      ch => results[ch] && !results[ch].startsWith('[생성 실패]')
+    );
+    if (validChannels.length === 0) { showToast('⚠️ 저장할 결과가 없습니다.'); return; }
+
+    setIsSaving(true);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+    try {
+      let productId = savedProductId;
+      if (!productId) {
+        const res = await fetch(`${backendUrl}/api/product/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: pName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.detail || '제품 등록 실패');
+        productId = data.data?.[0]?.id ?? null;
+        if (!productId) throw new Error('제품 ID를 받지 못했습니다.');
+        setSavedProductId(productId);
+      }
+
+      const saveResults = await Promise.all(
+        validChannels.map(async ch => {
+          const res = await fetch(`${backendUrl}/api/history/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              product_id: productId,
+              platform_type: ch,
+              generated_text: results[ch],
+              is_saved: true,
+            }),
+          });
+          return res.ok;
+        })
+      );
+
+      if (saveResults.every(Boolean)) {
+        showToast(`💾 ${validChannels.length}개 채널 결과가 저장되었습니다!`);
+      } else {
+        showToast('⚠️ 일부 채널 저장에 실패했습니다.');
+      }
+    } catch (err) {
+      showToast(`❌ 저장 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── 규제 검증 (채널별 /api/compliance/validate 병렬 호출) ──
+  const runCompliance = async (parsed: Record<string, string>) => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+    const targets = Object.entries(parsed).filter(([, text]) => text && !text.startsWith('[생성 실패]'));
+    if (targets.length === 0) { setCompliance({}); return; }
+
+    setComplianceLoading(true);
+    const entries = await Promise.all(
+      targets.map(async ([ch, text]) => {
+        try {
+          const res = await fetch(`${backendUrl}/api/compliance/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, channel: ch, country: 'KR', forbidden_words: pForbiddenWords }),
+          });
+          if (!res.ok) return null;
+          const report: ComplianceReport = await res.json();
+          return [ch, report] as const;
+        } catch {
+          return null; // 규제 서버 실패는 카피 생성 자체를 막지 않음 — 배지만 안 뜸
+        }
+      })
+    );
+    const map: Record<string, ComplianceReport> = {};
+    entries.forEach(e => { if (e) map[e[0]] = e[1]; });
+    setCompliance(prev => ({ ...prev, ...map })); // 서버가 이미 채워준 채널은 덮어쓰지 않고 병합
+    setComplianceLoading(false);
+  };
+
+  // ── 피드백 반영 재생성 — 버튼 클릭 시에만 1회, 자동 아님 ──
+  const handleRegenerateWithFeedback = async (ch: string) => {
+    const violations = compliance[ch]?.violations;
+    if (!violations || violations.length === 0) return;
+
+    setRegeneratingChannels(prev => new Set(prev).add(ch));
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+    try {
+      const res = await fetch(`${backendUrl}/api/generate/regenerate-with-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tone: pTone, core_message: pCoreMessage, forbidden_words: pForbiddenWords,
+          channel: ch, tnm: pTnm, length: pLength, purpose: pPurpose,
+          name: pName, category: pCategory, features: pFeatures, target_audience: pAudience,
+          country: 'KR', violations,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.detail || '재생성 실패');
+
+      setResults(prev => ({ ...prev, [ch]: data.ok ? data.text : `[생성 실패] ${data.text}` }));
+      if (data.compliance) {
+        setCompliance(prev => ({ ...prev, [ch]: data.compliance }));
+      }
+      showToast(`✨ ${CHANNEL_META[ch]?.label ?? ch} 피드백 반영 재생성 완료`);
+    } catch (err) {
+      showToast(`❌ 재생성 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
+      setRegeneratingChannels(prev => {
+        const next = new Set(prev);
+        next.delete(ch);
+        return next;
+      });
+    }
+  };
+
   // ── API 호출 ──
   const generateAdCopy = async () => {
     setIsLoading(true);
     setProgress(10);
     setResults({});
+    setCompliance({});
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
     const payload = {
@@ -214,19 +367,33 @@ function ResultContent() {
       if (!res.ok) throw new Error(data?.detail || '서버 에러');
 
       const parsed: Record<string, string> = {};
+      const complianceFromServer: Record<string, ComplianceReport> = {};
       for (const item of (data.results ?? [])) {
         parsed[item.channel] = item.ok ? item.text : `[생성 실패] ${item.text}`;
+        if (item.compliance) complianceFromServer[item.channel] = item.compliance;
       }
       setProgress(100);
-      setTimeout(() => { setResults(parsed); setIsLoading(false); }, 300);
+      setTimeout(() => {
+        setResults(parsed);
+        setIsLoading(false);
+        // 백엔드가 생성 시 이미 규제 검증(+자동 교정)까지 마치고 돌려준 결과를 그대로 사용.
+        // 혹시 못 받은 채널이 있으면 그 채널만 따로 검증.
+        setCompliance(complianceFromServer);
+        const missing = Object.fromEntries(
+          Object.entries(parsed).filter(([ch]) => !complianceFromServer[ch])
+        );
+        if (Object.keys(missing).length > 0) runCompliance(missing);
+      }, 300);
 
     } catch (err) {
       clearTimeout(fakeTimer);
       console.error('API 호출 실패, 데모 모드:', err);
       setProgress(100);
       setTimeout(() => {
-        setResults(buildFallback(selectedChannels, pName, pFeatures, pAudience));
+        const fallback = buildFallback(selectedChannels, pName, pFeatures, pAudience);
+        setResults(fallback);
         setIsLoading(false);
+        runCompliance(fallback);
         showToast('⚠️ API 연결 실패 → 데모 데이터 표시 중');
       }, 300);
     }
@@ -419,8 +586,12 @@ function ResultContent() {
                 originalContext={pFeatures}
                 productName={pName}
                 isLoading={isLoading}
+                compliance={compliance[ch]}
+                complianceLoading={complianceLoading}
+                isRegenerating={regeneratingChannels.has(ch)}
                 onCopy={handleCopy}
                 onDownload={handleDownload}
+                onRegenerateWithFeedback={handleRegenerateWithFeedback}
               />
             ))}
           </div>
@@ -428,10 +599,11 @@ function ResultContent() {
           {/* 카드 푸터 */}
           <div className="p-5 bg-slate-50/60 border-t border-slate-100 flex justify-between items-center">
             <div className="flex gap-3">
-              <button onClick={() => alert('결과 저장 기능은 개발 중입니다.')}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition"
+              <button onClick={handleSaveResults} disabled={isLoading || isSaving}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 disabled:opacity-40 transition flex items-center gap-2"
               >
-                결과 저장
+                {isSaving && <RefreshCw size={14} className="animate-spin" />}
+                {isSaving ? '저장 중...' : savedProductId ? '다시 저장' : '결과 저장'}
               </button>
               <button onClick={generateAdCopy} disabled={isLoading}
                 className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 disabled:opacity-40 transition"
@@ -447,16 +619,38 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* 규정 검토 결과 */}
-        <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl text-left mb-8">
-          <h4 className="font-bold text-amber-800 mb-2 text-sm">광고 규정 검토 결과 (Compliance Check)</h4>
-          <ul className="text-sm text-amber-700 space-y-1">
-            <li>✓ 금지 표현 필터링 완료: <span className="font-medium">{pForbiddenWords}</span></li>
-            <li>✓ 필수 부작용 고지 문구 삽입</li>
-            <li>✓ 의사/약사 상담 권고 disclaimer 적용</li>
-            <li>✓ 식약처 허가 범위 내 효능 표현 사용</li>
-          </ul>
-        </div>
+        {/* 규정 검토 결과 (backend/regulations 룰셋 기반 실측치, 채널별 상세는 각 카드 참고) */}
+        {(() => {
+          const reports = selectedChannels.map(ch => compliance[ch]).filter((r): r is ComplianceReport => !!r);
+          const { failCount, avgScore } = summarizeCompliance(reports);
+          const tone = reports.length === 0 ? 'neutral' : failCount > 0 ? 'fail' : 'pass';
+          const boxClasses = tone === 'fail'
+            ? 'bg-red-50 border-red-200'
+            : tone === 'pass' ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200';
+          const titleClasses = tone === 'fail' ? 'text-red-800' : tone === 'pass' ? 'text-emerald-800' : 'text-slate-500';
+
+          return (
+            <div className={`p-5 border rounded-2xl text-left mb-8 ${boxClasses}`}>
+              <h4 className={`font-bold mb-2 text-sm ${titleClasses}`}>광고 규정 검토 결과 (Compliance Check)</h4>
+              {isLoading || complianceLoading ? (
+                <p className="text-sm text-slate-400">채널별 규제 검사 중...</p>
+              ) : reports.length === 0 ? (
+                <p className="text-sm text-slate-400">검사 결과가 없습니다.</p>
+              ) : (
+                <>
+                  <p className={`text-sm font-medium mb-1 ${tone === 'fail' ? 'text-red-700' : 'text-emerald-700'}`}>
+                    평균 {avgScore}점 · {reports.length - failCount}/{reports.length}개 채널 통과
+                    {failCount > 0 && ` · ${failCount}개 채널 수정 필요`}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    금지어 입력: <span className="font-medium">{pForbiddenWords || '없음'}</span> ·
+                    위반 상세는 각 채널 카드의 &quot;수정이 필요해요&quot; 섹션 참고
+                  </p>
+                </>
+              )}
+            </div>
+          );
+        })()}
       </main>
 
       {/* ── CSV 내보내기 모달 ── */}

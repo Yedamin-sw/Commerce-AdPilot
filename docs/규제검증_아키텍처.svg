@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="2000" viewBox="0 0 1300 2000" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif">
+<rect x="0" y="0" width="1300" height="2000" fill="#F8FAFC"/>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#64748B"/>
+  </marker>
+  <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/>
+  </marker>
+</defs>
+<text x="650.0" y="40" font-size="24" font-weight="800" text-anchor="middle" fill="#0F172A">규제검증 &amp; 점수 알고리즘 아키텍처</text>
+<text x="650.0" y="62" font-size="13" text-anchor="middle" fill="#94A3B8">Commerce AdPilot · backend/regulations — 현재 구현 기준 (Layer 2 LLM 심의관 연동 완료 · 수동 피드백 재생성 루프 추가)</text>
+
+<text x="70" y="80" font-size="12" font-weight="700" letter-spacing="1.5" fill="#94A3B8">① 입력</text>
+<rect x="70" y="90" width="540" height="92" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="70" y="90" width="6" height="92" rx="3" fill="#3B82F6"/>
+<text x="92" y="118" font-size="14" font-weight="700" fill="#1E293B">개별 생성</text>
+<text x="92" y="140" font-size="12.5" fill="#475569">input 페이지 폼 입력</text>
+<text x="92" y="159" font-size="12.5" fill="#475569">POST /api/generate/platform</text>
+<text x="92" y="178" font-size="12.5" fill="#475569">채널별로 _generate_checked() 병렬 호출</text>
+<rect x="690" y="90" width="540" height="92" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="690" y="90" width="6" height="92" rx="3" fill="#3B82F6"/>
+<text x="712" y="118" font-size="14" font-weight="700" fill="#1E293B">CSV 업로드</text>
+<text x="712" y="140" font-size="12.5" fill="#475569">input 페이지 모달 (.csv/.xlsx)</text>
+<text x="712" y="159" font-size="12.5" fill="#475569">POST /api/generate/csv</text>
+<text x="712" y="178" font-size="12.5" fill="#475569">행마다 _generate_checked() 호출 (동기/비동기)</text>
+<line x1="340" y1="182" x2="650.0" y2="220" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="960" y1="182" x2="650.0" y2="220" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+<text x="70" y="220" font-size="12" font-weight="700" letter-spacing="1.5" fill="#94A3B8">② 카피 생성 — BACKEND/API/GENERATE.PY</text>
+<rect x="60" y="230" width="1180" height="222" rx="12" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1.5"/>
+<text x="90" y="258" font-size="14" font-weight="700" fill="#3730A3">_generate_checked(prompt, user_content, semaphore, country, channel, forbidden_words)</text>
+<rect x="100" y="278" width="300" height="92" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="100" y="278" width="6" height="92" rx="3" fill="#6366F1"/>
+<text x="122" y="306" font-size="14" font-weight="700" fill="#1E293B">build_prompt()</text>
+<text x="122" y="328" font-size="12.5" fill="#475569">톤·길이·목적 + 채널별 지침</text>
+<text x="122" y="347" font-size="12.5" fill="#475569">"필수 준수사항" 블록 (하드코딩)</text>
+<line x1="400" y1="324.0" x2="460" y2="324.0" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="460" y="278" width="320" height="92" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="460" y="278" width="6" height="92" rx="3" fill="#6366F1"/>
+<text x="482" y="306" font-size="14" font-weight="700" fill="#1E293B">_call_openai()</text>
+<text x="482" y="328" font-size="12.5" fill="#475569">GPT-4o 호출 (실패 시 최대 2회 재시도)</text>
+<text x="482" y="347" font-size="12.5" fill="#475569">위반 감지돼도 즉시 재생성하지 않음</text>
+<line x1="780" y1="324.0" x2="840" y2="324.0" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="840" y="278" width="340" height="92" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="840" y="278" width="6" height="92" rx="3" fill="#6366F1"/>
+<text x="862" y="306" font-size="14" font-weight="700" fill="#1E293B">compliance_check() 호출</text>
+<text x="862" y="328" font-size="12.5" fill="#475569">생성된 텍스트 → regulations 엔진으로</text>
+<text x="862" y="347" font-size="12.5" fill="#475569">= check_full(): Layer1+Layer2 병합 리포트</text>
+<text x="100" y="396" font-size="12" fill="#B45309" font-style="italic">⚠ build_prompt()의 "필수 준수사항"은 아직 하드코딩 — render_rules()로 룰셋 연동 전 (Phase 1 예정)</text>
+<text x="100" y="416" font-size="12" fill="#059669" font-style="italic">✓ compliance_check() = check_full() — Layer 1(결정론적) + Layer 2(LLM 심의관) 결과를 병합해 반환 (③ 참고)</text>
+<text x="100" y="436" font-size="12" fill="#2563EB" font-style="italic">✓ 초기 생성엔 자동교정 루프 없음 — 위반이 있어도 즉시 재생성 안 함, 결과+피드백만 반환 (수동 재생성은 ⑥ 참고)</text>
+<line x1="650.0" y1="452" x2="650.0" y2="484" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+<text x="70" y="492" font-size="12" font-weight="700" letter-spacing="1.5" fill="#94A3B8">③ 규제 검증 — BACKEND/REGULATIONS</text>
+<rect x="60" y="502" width="1180" height="536" rx="12" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1.5"/>
+<text x="90" y="530" font-size="14" font-weight="700" fill="#065F46">check_full(text, country, channel, extra_banned, use_llm=True)</text>
+
+<rect x="100" y="550" width="330" height="118" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="100" y="550" width="6" height="118" rx="3" fill="#10B981"/>
+<text x="122" y="578" font-size="14" font-weight="700" fill="#1E293B">loader.py</text>
+<text x="122" y="600" font-size="11.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#475569">load_ruleset(country)</text>
+<text x="122" y="619" font-size="11.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#475569">← kr.yaml(중첩,1526줄) · us/eu.yaml(평탄,54줄)</text>
+<text x="122" y="638" font-size="11.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#475569">중첩 kr.yaml → _flatten_nested_rules()로 평탄화</text>
+<text x="122" y="657" font-size="11.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#475569">lru_cache 메모리 캐시 · PDF는 런타임에 안 읽음</text>
+<line x1="430" y1="609.0" x2="460" y2="609.0" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+<rect x="460" y="550" width="760" height="118" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="460" y="550" width="6" height="118" rx="3" fill="#10B981"/>
+<text x="482" y="578" font-size="14" font-weight="700" fill="#1E293B">engine.py · check()  — Layer 1 (결정론적)</text>
+<text x="482" y="600" font-size="12.5" fill="#475569">· keyword / regex 매칭 (prohibited_claim, exaggeration)</text>
+<text x="482" y="619" font-size="12.5" fill="#475569">· require_any_of 누락 검사 (mandatory_statement)</text>
+<text x="482" y="638" font-size="12.5" fill="#475569">· channel 필터 (rule.channels 지정 시) · extra_banned(사용자 forbidden_words) 검사</text>
+<text x="482" y="657" font-size="12.5" fill="#475569">→ 빠름 · 무료 · 설명가능. 암시적 위반은 여기서 못 잡음 (아래 Layer 2 몫)</text>
+
+<line x1="650.0" y1="668" x2="650.0" y2="698" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+<rect x="100" y="698" width="1120" height="130" rx="12" fill="#FFFFFF" stroke="#6EE7B7" stroke-width="1.5"/>
+<rect x="100" y="698" width="6" height="130" rx="3" fill="#059669"/>
+<text x="122" y="726" font-size="14" font-weight="700" fill="#1E293B">layer2.py · check_llm()  — Layer 2 (LLM 심의관, 신규 구현)</text>
+<text x="122" y="748" font-size="12.5" fill="#475569">· checkable_rules(): 활성 규칙 중 detect.llm_check 있는 것만 추출 (키워드·정규식 없는 kr.yaml 신규 규칙 대상)</text>
+<text x="122" y="767" font-size="12.5" fill="#475569">· build_judge_prompt(): 규칙 전체 → 질문 목록 + JSON 응답 스펙, system prompt 하나로 구성</text>
+<text x="122" y="786" font-size="12.5" fill="#475569">· GPT-4o 1회 호출로 전체 규칙 동시 판정 (규칙별 개별 호출 아님 · temperature 0)</text>
+<text x="122" y="805" font-size="12.5" fill="#475569">· triggered=true 항목만 Violation 화 — 실패해도 예외를 삼키고 빈 목록 반환 (Layer 1 결과는 보존)</text>
+
+<line x1="650.0" y1="828" x2="650.0" y2="858" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+<rect x="100" y="868" width="1120" height="150" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="100" y="868" width="6" height="150" rx="3" fill="#047857"/>
+<text x="122" y="896" font-size="14" font-weight="700" fill="#1E293B">check_full() — 병합 &amp; 점수 계산 (engine.py)</text>
+<text x="130" y="918" font-size="12.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#334155">existing_ids = Layer1 rule_id 집합 → Layer2 결과 중 겹치지 않는 것만 추가 병합</text>
+<text x="130" y="940" font-size="15" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700" fill="#047857">score = 100 − Σ(위반 severity 가중치)   ·   critical 40 / major 15 / minor 3   ·   0~100 clamp</text>
+<text x="130" y="962" font-size="12.5" fill="#334155">passed = critical·major 위반 0건일 때만 True — score는 참고 지표, 게이팅엔 passed만 사용</text>
+<text x="130" y="984" font-size="11.5" fill="#94A3B8" font-style="italic">Layer 2 실패(키 없음·네트워크·JSON 파싱 오류 등) 시 예외를 삼키고 Layer 1만 반환 — checked_layers=["deterministic"]</text>
+
+<line x1="650.0" y1="1038" x2="650.0" y2="1068" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="70" y="1076" font-size="12" font-weight="700" letter-spacing="1.5" fill="#94A3B8">④ 응답 — COMPLIANCEREPORT</text>
+<rect x="260" y="1086" width="780" height="130" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="260" y="1086" width="6" height="130" rx="3" fill="#475569"/>
+<text x="282" y="1114" font-size="14" font-weight="700" fill="#1E293B">schema.py · ComplianceReport</text>
+<text x="290" y="1136" font-size="12.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#334155">{ country, passed, score, violations: [</text>
+<text x="310" y="1156" font-size="12.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#64748B">{ rule_id, severity, matched_text, message, suggestion, source }, ... ],</text>
+<text x="290" y="1176" font-size="12.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#334155">auto_fixed: false, checked_layers: ["deterministic","llm"] }  ← L2 실패 시 ["deterministic"]만</text>
+
+<line x1="650.0" y1="1216" x2="650.0" y2="1246" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="70" y="1254" font-size="12" font-weight="700" letter-spacing="1.5" fill="#94A3B8">⑤ 화면 표시 — FRONTEND</text>
+<rect x="60" y="1264" width="1180" height="420" rx="12" fill="#FDF2F8" stroke="#FBCFE8" stroke-width="1.5"/>
+<text x="90" y="1292" font-size="14" font-weight="700" fill="#9D174D">components/compliance.tsx — 두 화면이 공유하는 공용 컴포넌트</text>
+<rect x="100" y="1310" width="500" height="84" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="100" y="1310" width="6" height="84" rx="3" fill="#EC4899"/>
+<text x="122" y="1338" font-size="14" font-weight="700" fill="#1E293B">ComplianceBadges</text>
+<text x="122" y="1360" font-size="12.5" fill="#475569">점수 → 등급 배지 A/B/C/F</text>
+<text x="122" y="1379" font-size="12.5" fill="#475569">gradeFromScore(): 90·70·40 경계</text>
+<rect x="640" y="1310" width="540" height="84" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="640" y="1310" width="6" height="84" rx="3" fill="#EC4899"/>
+<text x="662" y="1338" font-size="14" font-weight="700" fill="#1E293B">ViolationCards + highlightViolations</text>
+<text x="662" y="1360" font-size="12.5" fill="#475569">위반 카드 (근거 조문·수정 제안)</text>
+<text x="662" y="1379" font-size="12.5" fill="#475569">카피 위 matched_text 하이라이트</text>
+<line x1="300" y1="1394" x2="300" y2="1428" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="860" y1="1394" x2="860" y2="1428" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="100" y="1428" width="500" height="210" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="100" y="1428" width="6" height="210" rx="3" fill="#DB2777"/>
+<text x="122" y="1456" font-size="14" font-weight="700" fill="#1E293B">result/page.tsx</text>
+<text x="122" y="1478" font-size="12.5" fill="#475569">개별 생성 결과</text>
+<text x="122" y="1497" font-size="12.5" fill="#475569">채널별 ChannelCard에 배지 + 수정 카드</text>
+<text x="122" y="1516" font-size="12.5" fill="#475569">/platform 응답에 포함된 compliance 사용</text>
+<text x="122" y="1535" font-size="12.5" fill="#7C3AED" font-weight="700">🪄 위반 있는 채널엔 "피드백 반영 재생성" 버튼 노출 (⑥)</text>
+<text x="122" y="1554" font-size="12.5" fill="#475569">초기 생성 자체엔 자동교정 없음 → auto_fixed 항상 false</text>
+<rect x="640" y="1428" width="540" height="210" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="640" y="1428" width="6" height="210" rx="3" fill="#DB2777"/>
+<text x="662" y="1456" font-size="14" font-weight="700" fill="#1E293B">csv-result/page.tsx</text>
+<text x="662" y="1478" font-size="12.5" fill="#475569">CSV 업로드 결과</text>
+<text x="662" y="1497" font-size="12.5" fill="#475569">행별 테이블 + 클릭하면 펼쳐서 동일 카드 표시</text>
+<text x="662" y="1516" font-size="12.5" fill="#475569">sessionStorage에만 보관 (history 저장 안 함)</text>
+<text x="662" y="1535" font-size="12.5" fill="#475569">/csv, /csv/preview 응답의 compliance 사용</text>
+<text x="100" y="1662" font-size="12" fill="#9D174D" font-style="italic">Layer 2가 이제 동작해서 암시적 위반(예: "면역력 걱정 끝" → 질병 예방 암시)도 잡힘 — matched_text 없으면 필수 문구 누락 또는 LLM이 evidence를 못 찾은 경우</text>
+
+<line x1="650.0" y1="1684" x2="650.0" y2="1714" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="70" y="1722" font-size="12" font-weight="700" letter-spacing="1.5" fill="#94A3B8">⑥ 피드백 반영 재생성 — 수동 1회 루프 (신규)</text>
+<rect x="60" y="1732" width="1180" height="170" rx="12" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.5"/>
+<rect x="60" y="1732" width="6" height="170" rx="3" fill="#7C3AED"/>
+<text x="90" y="1760" font-size="14" font-weight="700" fill="#5B21B6">POST /api/generate/regenerate-with-feedback — ChannelCard 버튼 클릭 시에만 1회 호출 (자동 아님)</text>
+<text x="90" y="1782" font-size="12.5" fill="#475569">· 트리거: 위반(violations)이 있는 채널에만 노출되는 버튼 — 클릭한 그 채널 하나만 대상</text>
+<text x="90" y="1801" font-size="12.5" fill="#475569">· repair.py · build_repair_instructions(violations) — 원본 프롬프트 뒤에 "지적된 부분만 고쳐서 재작성" 지시문을 이어붙임</text>
+<text x="90" y="1820" font-size="12.5" fill="#475569">· _call_openai() 재호출 (temperature 0.4, 창의성↓ 정확도↑) → compliance_check() = check_full() 로 재검증 (③ 재사용)</text>
+<text x="90" y="1839" font-size="12.5" fill="#475569">· 응답: 새 text + 새 ComplianceReport만 해당 채널 카드에 반영 — 다른 채널·auto_fixed 플래그엔 영향 없음</text>
+
+<path d="M 60 1817 L 40 1817 L 40 770 L 60 770" fill="none" stroke="#94A3B8" stroke-width="1.75" stroke-dasharray="5,4" marker-end="url(#arrow-grey)"/>
+<text x="24" y="1300" font-size="11" fill="#94A3B8" transform="rotate(-90 24 1300)">규제 검증(③) 재사용 — compliance_check() 재호출</text>
+
+<rect x="60" y="1936" width="22" height="22" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="90" y="1952" font-size="12.5" fill="#475569">자동 파이프라인 (①~⑤, 생성할 때마다 항상 실행)</text>
+<rect x="430" y="1936" width="22" height="22" rx="5" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.5"/>
+<text x="460" y="1952" font-size="12.5" fill="#475569">수동 트리거 — 사용자가 버튼을 눌러야만 실행 (⑥)</text>
+</svg>
